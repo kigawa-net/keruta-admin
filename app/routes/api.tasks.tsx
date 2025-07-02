@@ -1,0 +1,35 @@
+import { LoaderFunction, json } from "@remix-run/node";
+import { getApiUrl, createFetchOptions } from "~/utils/backendConfig";
+
+/**
+ * Server-side loader function to proxy requests to the backend API
+ * This avoids CORS issues by having the server make the request instead of the client
+ */
+export const loader: LoaderFunction = async ({ request }) => {
+  try {
+    // Construct the backend API URL
+    const url = `${getApiUrl()}/tasks`;
+    
+    // Make the request to the backend API
+    const response = await fetch(url, createFetchOptions({ method: 'GET' }));
+    
+    // Check if the request was successful
+    if (!response.ok) {
+      // If not, throw an error with the status text
+      throw new Error(`API request failed: ${response.statusText}`);
+    }
+    
+    // Parse the response as JSON
+    const data = await response.json();
+    
+    // Return the data as JSON
+    return json(data);
+  } catch (error) {
+    // If there's an error, return a 500 status with the error message
+    console.error("Error proxying request to tasks API:", error);
+    return json(
+      { error: { message: error instanceof Error ? error.message : "Unknown error" } },
+      { status: 500 }
+    );
+  }
+};
