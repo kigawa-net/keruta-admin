@@ -19,7 +19,6 @@ npm install
 
 - `BACKEND_URL`: バックエンドAPIのベースURL（デフォルト: `http://localhost:3001/api`）
 - `API_VERSION`: APIバージョン（デフォルト: `v1`）
-- `AUTH_TOKEN`: 認証トークン（オプション）
 
 環境変数は`.env`ファイルまたはシステムの環境変数として設定できます：
 
@@ -27,8 +26,8 @@ npm install
 # .envファイルの例
 BACKEND_URL=https://api.example.com
 API_VERSION=v2
-AUTH_TOKEN=your-auth-token
 ```
+
 
 3. 開発サーバーの起動
 ```bash

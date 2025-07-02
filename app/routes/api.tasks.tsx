@@ -16,7 +16,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     // Check if the request was successful
     if (!response.ok) {
       // If not, throw an error with the status text
-      throw new Error(`API request failed: ${response.statusText}`);
+      throw new Error(`API request failed: ${response.statusText}, body: ${await response.text()}`);
     }
 
     // Check the content type to ensure it's JSON
