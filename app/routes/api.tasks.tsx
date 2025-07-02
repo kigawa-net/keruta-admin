@@ -9,19 +9,27 @@ export const loader: LoaderFunction = async ({ request }) => {
   try {
     // Construct the backend API URL
     const url = `${getApiUrl()}/tasks`;
-    
+
     // Make the request to the backend API
     const response = await fetch(url, createFetchOptions({ method: 'GET' }));
-    
+
     // Check if the request was successful
     if (!response.ok) {
       // If not, throw an error with the status text
       throw new Error(`API request failed: ${response.statusText}`);
     }
-    
+
+    // Check the content type to ensure it's JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      // If not JSON, get the text and throw an error with details
+      const text = await response.text();
+      throw new Error(`API returned non-JSON response: ${text.substring(0, 100)}...`);
+    }
+
     // Parse the response as JSON
     const data = await response.json();
-    
+
     // Return the data as JSON
     return json(data);
   } catch (error) {
