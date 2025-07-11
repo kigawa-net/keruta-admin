@@ -6,7 +6,7 @@
  * development, testing, and production environments.
  */
 
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 
 /**
  * Get the backend API URL from environment variables or use a default

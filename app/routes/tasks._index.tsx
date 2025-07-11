@@ -69,6 +69,7 @@ export default function Tasks() {
 
   // タスク一覧を取得する関数
   const fetchTasks = async () => {
+      console.debug("fetch")
     try {
       setLoading(true);
       // Use the apiGet function which now uses the server-side API proxy route
@@ -79,6 +80,7 @@ export default function Tasks() {
       console.error("タスク一覧の取得に失敗しました:", err);
       setError("タスク一覧の取得に失敗しました。");
     } finally {
+          console.debug("finary")
       setLoading(false);
     }
   };
@@ -104,10 +106,10 @@ export default function Tasks() {
             <button className="btn btn-outline-secondary" onClick={handleRefresh}>更新</button>
           </div>
           <div className="d-flex">
-            <input 
-              type="text" 
-              className="form-control me-2" 
-              placeholder="タスク検索..." 
+            <input
+              type="text"
+              className="form-control me-2"
+              placeholder="タスク検索..."
               aria-label="タスク検索"
             />
             <button className="btn btn-outline-secondary">検索</button>
