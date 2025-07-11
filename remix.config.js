@@ -7,9 +7,20 @@ export default {
   // serverBuildPath: "build/index.js",
   serverModuleFormat: "esm",
   future: {
-    v2_errorBoundary: true,
-    v2_meta: true,
-    v2_normalizeFormMethod: true,
-    v2_routeConvention: true,
+    // Recommended future flags for React Router v7
+    v3_fetcherPersist: true,
+    v3_lazyRouteDiscovery: true,
+    v3_relativeSplatPath: true,
+    v3_singleFetch: true,
+    v3_throwAbortReason: true,
+  },
+  // Add polyfills for Node.js built-in modules
+  browserNodeBuiltinsPolyfill: {
+    modules: {
+      buffer: true,
+      stream: true,
+      util: true,
+      crypto: true,
+    }
   },
 };
