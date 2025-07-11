@@ -107,7 +107,7 @@ export default function Tasks() {
 
                 <div className="d-flex justify-content-between mb-3">
                     <div>
-                        <button className="btn btn-primary me-2">新規タスク作成</button>
+                        <button className="btn btn-primary me-2" onClick={() => window.location.href = "/tasks/new"}>新規タスク作成</button>
                         <button className="btn btn-outline-secondary" onClick={handleRefresh}>更新</button>
                     </div>
                     <div className="d-flex">
