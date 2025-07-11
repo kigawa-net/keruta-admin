@@ -1,6 +1,6 @@
 /**
  * API Utility
- * 
+ *
  * This file provides utility functions for making API requests to the backend.
  * It uses the backend configuration from backendConfig.ts.
  */
@@ -27,9 +27,10 @@ export class ApiError extends Error {
  * @throws ApiError if the request fails
  */
 export async function apiGet<T>(endpoint: string): Promise<T> {
-  // Use the server-side API proxy route instead of making a direct request to the backend
-  const url = `/api/${endpoint.replace(/^\//, '')}`;
-  const response = await fetch(url);
+  // Use the API URL from backendConfig
+  const baseUrl = getApiUrl();
+  const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
+  const response = await fetch(url, createFetchOptions());
 
   if (!response.ok) {
     throw new ApiError(`API request failed: ${response.statusText}`, response.status);
@@ -46,13 +47,12 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
  * @throws ApiError if the request fails
  */
 export async function apiPost<T>(endpoint: string, data: any): Promise<T> {
-  // Use the server-side API proxy route instead of making a direct request to the backend
-  const url = `/api/${endpoint.replace(/^\//, '')}`;
+  // Use the API URL from backendConfig
+  const baseUrl = getApiUrl();
+  const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
   const response = await fetch(url, {
+    ...createFetchOptions(),
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(data),
   });
 
@@ -71,13 +71,12 @@ export async function apiPost<T>(endpoint: string, data: any): Promise<T> {
  * @throws ApiError if the request fails
  */
 export async function apiPut<T>(endpoint: string, data: any): Promise<T> {
-  // Use the server-side API proxy route instead of making a direct request to the backend
-  const url = `/api/${endpoint.replace(/^\//, '')}`;
+  // Use the API URL from backendConfig
+  const baseUrl = getApiUrl();
+  const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
   const response = await fetch(url, {
+    ...createFetchOptions(),
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(data),
   });
 
@@ -95,13 +94,12 @@ export async function apiPut<T>(endpoint: string, data: any): Promise<T> {
  * @throws ApiError if the request fails
  */
 export async function apiDelete<T>(endpoint: string): Promise<T> {
-  // Use the server-side API proxy route instead of making a direct request to the backend
-  const url = `/api/${endpoint.replace(/^\//, '')}`;
+  // Use the API URL from backendConfig
+  const baseUrl = getApiUrl();
+  const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
   const response = await fetch(url, {
+    ...createFetchOptions(),
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
   });
 
   if (!response.ok) {
