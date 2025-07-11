@@ -11,6 +11,7 @@ async function loader(): Promise<{
 
 export default function Layout() {
     const loaderData = useLoaderData<typeof loader>()
+    console.log(loaderData)
     return <ClientProvider clientState={loaderData.clientState}>
         <Outlet/>
     </ClientProvider>

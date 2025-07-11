@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 import type {MetaFunction} from "@remix-run/node";
 import Layout from "~/components/Layout";
 import {apiGet} from "~/utils/api";
-import {useClient} from "~/components/Client";
+import {ClientState, useClient} from "~/components/Client";
 
 export const meta: MetaFunction = () => {
     return [
@@ -68,15 +68,17 @@ export default function Tasks() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const clientState = useClient()
-
+console.debug("clientState", clientState)
     // タスク一覧を取得する関数
-    const fetchTasks = async () => {
+    const fetchTasks = async (clientState: ClientState) => {
         console.debug("fetch")
         if (clientState.state == "loading") return
+        console.debug("fetch2")
         try {
             setLoading(true);
             // Use the apiGet function which now uses the server-side API proxy route
             const data = await apiGet<Task[]>(clientState, "tasks");
+            console.debug("fetch3")
             setTasks(data);
             setError(null);
         } catch (err) {
@@ -90,12 +92,12 @@ export default function Tasks() {
 
     // コンポーネントのマウント時にタスク一覧を取得
     useEffect(() => {
-        fetchTasks();
-    }, []);
+        fetchTasks(clientState);
+    }, [clientState]);
 
     // 更新ボタンのクリックハンドラ
     const handleRefresh = () => {
-        // fetchTasks();
+        fetchTasks(clientState);
     };
 
     return (
