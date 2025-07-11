@@ -1,6 +1,6 @@
 /**
  * Backend Configuration Utility
- * 
+ *
  * This file provides configuration for connecting to the backend API.
  * It uses environment variables to allow different configurations for
  * development, testing, and production environments.
@@ -10,6 +10,7 @@ import jwt from 'jsonwebtoken';
 
 /**
  * Get the backend API URL from environment variables or use a default
+ * Checks for API_URL first, then BACKEND_URL, then falls back to default
  * @returns The configured backend API URL
  */
 export function getBackendUrl(): string {
@@ -18,8 +19,8 @@ export function getBackendUrl(): string {
     // Use default for browser environment
     return 'https://keruta.kigawa.net';
   }
-  // Use environment variable if available, otherwise use default
-  return process.env.BACKEND_URL || 'http://localhost:3001';
+  // Use API_URL or BACKEND_URL environment variable if available, otherwise use default
+  return process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
 }
 
 /**
@@ -37,10 +38,18 @@ export function getApiVersion(): string {
 
 /**
  * Get the complete API URL including version
+ * Handles cases where API_URL might already include part of the path
  * @returns The full API URL with version
  */
 export function getApiUrl(): string {
-  return `${getBackendUrl()}/api/${getApiVersion()}`;
+  const baseUrl = getBackendUrl();
+
+  // Check if the URL already contains /api/ to avoid duplication
+  if (baseUrl.includes('/api/')) {
+    return baseUrl;
+  }
+
+  return `${baseUrl}/api/${getApiVersion()}`;
 }
 
 /**
