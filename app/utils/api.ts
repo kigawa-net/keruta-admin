@@ -2,109 +2,115 @@
  * API Utility
  *
  * This file provides utility functions for making API requests to the backend.
- * It uses the backend configuration from backendConfig.ts.
+ * It uses the backend configuration from backendConfig.server.ts.
  */
 
-import { getApiUrl, createFetchOptions } from './backendConfig';
+import {createFetchOptions, getApiUrl} from "~/utils/apiConfig";
+import {LoadedClientState} from "~/components/Client";
 
 /**
  * Generic API error class
  */
 export class ApiError extends Error {
-  status: number;
+    status: number;
 
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-  }
+    constructor(message: string, status: number) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+    }
 }
 
 /**
  * Make a GET request to the API
+ * @param clientState
  * @param endpoint The API endpoint (without the base URL)
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiGet<T>(endpoint: string): Promise<T> {
-  // Use the API URL from backendConfig
-  const baseUrl = getApiUrl();
-  const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
-  const response = await fetch(url, createFetchOptions());
+export async function apiGet<T>(clientState: LoadedClientState
+    , endpoint: string): Promise<T> {
+    // Use the API URL from backendConfig
+    const baseUrl = getApiUrl();
+    const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
+    const response = await fetch(url, createFetchOptions(clientState));
 
-  if (!response.ok) {
-    throw new ApiError(`API request failed: ${response.statusText}`, response.status);
-  }
+    if (!response.ok) {
+        throw new ApiError(`API request failed: ${response.statusText}`, response.status);
+    }
 
-  return response.json();
+    return response.json();
 }
 
 /**
  * Make a POST request to the API
+ * @param clientState
  * @param endpoint The API endpoint (without the base URL)
  * @param data The data to send in the request body
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiPost<T>(endpoint: string, data: any): Promise<T> {
-  // Use the API URL from backendConfig
-  const baseUrl = getApiUrl();
-  const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
-  const response = await fetch(url, {
-    ...createFetchOptions(),
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
+export async function apiPost<T>(clientState: LoadedClientState, endpoint: string, data: any): Promise<T> {
+    // Use the API URL from backendConfig
+    const baseUrl = getApiUrl();
+    const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
+    const response = await fetch(url, {
+        ...createFetchOptions(clientState),
+        method: 'POST',
+        body: JSON.stringify(data),
+    });
 
-  if (!response.ok) {
-    throw new ApiError(`API request failed: ${response.statusText}`, response.status);
-  }
+    if (!response.ok) {
+        throw new ApiError(`API request failed: ${response.statusText}`, response.status);
+    }
 
-  return response.json();
+    return response.json();
 }
 
 /**
  * Make a PUT request to the API
+ * @param clientState
  * @param endpoint The API endpoint (without the base URL)
  * @param data The data to send in the request body
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiPut<T>(endpoint: string, data: any): Promise<T> {
-  // Use the API URL from backendConfig
-  const baseUrl = getApiUrl();
-  const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
-  const response = await fetch(url, {
-    ...createFetchOptions(),
-    method: 'PUT',
-    body: JSON.stringify(data),
-  });
+export async function apiPut<T>(clientState: LoadedClientState, endpoint: string, data: any): Promise<T> {
+    // Use the API URL from backendConfig
+    const baseUrl = getApiUrl();
+    const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
+    const response = await fetch(url, {
+        ...createFetchOptions(clientState),
+        method: 'PUT',
+        body: JSON.stringify(data),
+    });
 
-  if (!response.ok) {
-    throw new ApiError(`API request failed: ${response.statusText}`, response.status);
-  }
+    if (!response.ok) {
+        throw new ApiError(`API request failed: ${response.statusText}`, response.status);
+    }
 
-  return response.json();
+    return response.json();
 }
 
 /**
  * Make a DELETE request to the API
+ * @param clientState
  * @param endpoint The API endpoint (without the base URL)
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiDelete<T>(endpoint: string): Promise<T> {
-  // Use the API URL from backendConfig
-  const baseUrl = getApiUrl();
-  const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
-  const response = await fetch(url, {
-    ...createFetchOptions(),
-    method: 'DELETE',
-  });
+export async function apiDelete<T>(clientState: LoadedClientState, endpoint: string): Promise<T> {
+    // Use the API URL from backendConfig
+    const baseUrl = getApiUrl();
+    const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
+    const response = await fetch(url, {
+        ...createFetchOptions(clientState),
+        method: 'DELETE',
+    });
 
-  if (!response.ok) {
-    throw new ApiError(`API request failed: ${response.statusText}`, response.status);
-  }
+    if (!response.ok) {
+        throw new ApiError(`API request failed: ${response.statusText}`, response.status);
+    }
 
-  return response.json();
+    return response.json();
 }
