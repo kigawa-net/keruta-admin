@@ -1,5 +1,5 @@
 import {ActionFunction, json, LoaderFunction} from "@remix-run/node";
-import {createFetchOptions, getApiUrl} from "~/utils/apiConfig";
+import {createFetchOptions} from "~/utils/apiConfig";
 import {loadClientState} from "~/components/Client";
 
 /**
@@ -21,7 +21,7 @@ export const loader: LoaderFunction = async ({request, params}) => {
         }
 
         // Construct the backend API URL
-        const url = `${getApiUrl()}/${endpoint}`;
+        const url = `${clientState.apiUrl}/${endpoint}`;
 
         // Make the request to the backend API
         const response = await fetch(url, createFetchOptions(clientState, {method: 'GET'}));
@@ -60,7 +60,7 @@ export const action: ActionFunction = async ({request, params}) => {
         }
 
         // Construct the backend API URL
-        const url = `${getApiUrl()}/${endpoint}`;
+        const url = `${clientState.apiUrl}/${endpoint}`;
 
         // Get the request method and body
         const method = request.method;

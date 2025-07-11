@@ -5,8 +5,8 @@
  * It uses the backend configuration from backendConfig.server.ts.
  */
 
-import {createFetchOptions, getApiUrl} from "~/utils/apiConfig";
 import {LoadedClientState} from "~/components/Client";
+import {createFetchOptions} from "~/utils/apiConfig";
 
 /**
  * Generic API error class
@@ -31,7 +31,7 @@ export class ApiError extends Error {
 export async function apiGet<T>(clientState: LoadedClientState
     , endpoint: string): Promise<T> {
     // Use the API URL from backendConfig
-    const baseUrl = getApiUrl();
+    const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
     const response = await fetch(url, createFetchOptions(clientState));
 
@@ -52,7 +52,7 @@ export async function apiGet<T>(clientState: LoadedClientState
  */
 export async function apiPost<T>(clientState: LoadedClientState, endpoint: string, data: any): Promise<T> {
     // Use the API URL from backendConfig
-    const baseUrl = getApiUrl();
+    const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
     const response = await fetch(url, {
         ...createFetchOptions(clientState),
@@ -77,7 +77,7 @@ export async function apiPost<T>(clientState: LoadedClientState, endpoint: strin
  */
 export async function apiPut<T>(clientState: LoadedClientState, endpoint: string, data: any): Promise<T> {
     // Use the API URL from backendConfig
-    const baseUrl = getApiUrl();
+    const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
     const response = await fetch(url, {
         ...createFetchOptions(clientState),
@@ -101,7 +101,7 @@ export async function apiPut<T>(clientState: LoadedClientState, endpoint: string
  */
 export async function apiDelete<T>(clientState: LoadedClientState, endpoint: string): Promise<T> {
     // Use the API URL from backendConfig
-    const baseUrl = getApiUrl();
+    const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
     const response = await fetch(url, {
         ...createFetchOptions(clientState),

@@ -1,21 +1,10 @@
 import {createContext, ReactNode, useContext} from "react";
-import {getAuthToken} from "~/utils/backendConfig.server";
+import {getApiUrl, getAuthToken, getBackendUrl} from "~/utils/backendConfig.server";
 
 const ClientContext = createContext<ClientState>({
     state: "loading"
 })
-export async function loadClientState(): Promise<LoadedClientState> {
-    const authToken = getAuthToken();
-    if (!authToken) {
-        return {
-            state: "unauthorized"
-        }
-    }
-    return {
-        state: "authorized",
-        authToken,
-    }
-}
+
 export function ClientProvider(
     {
         children,
@@ -32,12 +21,33 @@ export function useClient() {
     return useContext(ClientContext)
 }
 
-export interface AuthorizedClientState {
-    state: "authorized",
-    authToken: string
+export async function loadClientState(): Promise<LoadedClientState> {
+    const authToken = getAuthToken();
+    const backendUrl = getBackendUrl()
+    const apiUrl = getApiUrl()
+    if (!authToken) {
+        return {
+            state: "unauthorized",
+            backendUrl,
+            apiUrl,
+        }
+    }
+    return {
+        state: "authorized",
+        authToken,
+        backendUrl,
+        apiUrl,
+    }
 }
 
-export interface UnauthorizedClientState {
+export interface AuthorizedClientState {
+    state: "authorized",
+    authToken: string,
+    backendUrl: string,
+    apiUrl: string,
+}
+
+export type UnauthorizedClientState = Omit<AuthorizedClientState, "authToken" | "state"> & {
     state: "unauthorized"
 }
 

@@ -7,6 +7,8 @@
  */
 
 import jwt from 'jsonwebtoken';
+import {defaultFetchOptions} from "~/utils/apiConfig";
+import {LoadedClientState} from "~/components/Client";
 
 /**
  * Generate a JWT token using the JWT_SECRET environment variable
@@ -49,4 +51,43 @@ export function getAuthToken(): string | undefined {
 
     // Fall back to AUTH_TOKEN from environment variables if available
     return process.env.AUTH_TOKEN;
+}
+
+/**
+ * Get the backend API URL from environment variables or use a default
+ * Checks for API_URL first, then BACKEND_URL, then falls back to default
+ * @returns The configured backend API URL
+ */
+export function getBackendUrl(): string {
+    // Use API_URL or BACKEND_URL environment variable if available, otherwise use default
+    return process.env.PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
+}
+/**
+ * Get the complete API URL including version
+ * Handles cases where API_URL might already include part of the path
+ * @returns The full API URL with version
+ */
+export function getApiUrl(): string {
+    const baseUrl = getBackendUrl();
+
+    // Check if the URL already contains /api/ to avoid duplication
+    if (baseUrl.includes('/api/')) {
+        return baseUrl;
+    }
+
+    return `${baseUrl}/api/${getApiVersion()}`;
+}
+
+
+/**
+ * Get the backend API version from environment variables or use a default
+ * @returns The configured API version
+ */
+export function getApiVersion(): string {
+    // Check if we're in a browser environment (process is not defined)
+    if (typeof process === 'undefined' || !process.env) {
+        // Use default for browser environment
+        return 'v1';
+    }
+    return process.env.API_VERSION || 'v1';
 }
