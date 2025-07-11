@@ -1,19 +1,19 @@
-import Keycloak from 'keycloak-js';
+import * as Keycloak from 'keycloak-js';
 
 /**
  * Keycloak Configuration
- * 
+ *
  * This file provides configuration and utility functions for Keycloak authentication.
  */
 
 // Initialize Keycloak instance
-let keycloak: Keycloak | null = null;
+let keycloak: Keycloak.default | null = null;
 
 /**
  * Initialize the Keycloak instance
  * @returns The initialized Keycloak instance
  */
-export function initKeycloak(): Keycloak {
+export function initKeycloak(): Keycloak.default {
   if (keycloak) {
     return keycloak;
   }
@@ -29,7 +29,7 @@ export function initKeycloak(): Keycloak {
   const clientId = process.env.KEYCLOAK_CLIENT_ID || 'keruta-admin';
 
   // Create Keycloak instance
-  keycloak = new Keycloak({
+  keycloak = new Keycloak.default({
     url,
     realm,
     clientId,
@@ -42,7 +42,7 @@ export function initKeycloak(): Keycloak {
  * Get the Keycloak instance
  * @returns The Keycloak instance or null if not initialized
  */
-export function getKeycloak(): Keycloak | null {
+export function getKeycloak(): Keycloak.default | null {
   return keycloak;
 }
 
@@ -73,7 +73,7 @@ export async function initKeycloakAuth(
 ): Promise<void> {
   try {
     const kc = initKeycloak();
-    
+
     // Initialize Keycloak
     const authenticated = await kc.init({
       onLoad: 'check-sso',
@@ -97,7 +97,7 @@ export async function initKeycloakAuth(
  * Setup token refresh
  * @param kc The Keycloak instance
  */
-function setupTokenRefresh(kc: Keycloak): void {
+function setupTokenRefresh(kc: Keycloak.default): void {
   // Setup token refresh
   setInterval(() => {
     kc.updateToken(70)
