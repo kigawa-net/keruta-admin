@@ -68,7 +68,7 @@ export default function Tasks() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const clientState = useClient()
-console.debug("clientState", clientState)
+
     // タスク一覧を取得する関数
     const fetchTasks = async (clientState: ClientState) => {
         console.debug("fetch")
