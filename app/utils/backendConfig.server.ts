@@ -35,24 +35,6 @@ export function generateJwtToken(): string | undefined {
  * @returns The authentication token or undefined
  */
 export function getAuthToken(): string | undefined {
-    // Try to get token from Keycloak if we're in a browser environment
-    if (typeof window !== 'undefined') {
-        try {
-            // Dynamically import to avoid server-side issues
-            const {getKeycloakToken, isAuthenticated} = require('./keycloak');
-
-            // If authenticated with Keycloak, use that token
-            if (isAuthenticated()) {
-                const keycloakToken = getKeycloakToken();
-                if (keycloakToken) {
-                    return keycloakToken;
-                }
-            }
-        } catch (error) {
-            console.warn('Failed to get Keycloak token:', error);
-        }
-    }
-
     // Check if we're in a browser environment (process is not defined)
     if (typeof process === 'undefined' || !process.env) {
         // Use default for browser environment or return undefined

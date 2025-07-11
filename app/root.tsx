@@ -14,8 +14,7 @@ import { useEffect, useState } from "react";
 // Import Bootstrap CSS
 import bootstrapStyles from "bootstrap/dist/css/bootstrap.min.css";
 
-// Import KeycloakProvider and Navbar
-import KeycloakProvider from "~/components/KeycloakProvider";
+// Import Navbar
 import Navbar from "~/components/Navbar";
 
 export const links: LinksFunction = () => [
@@ -23,26 +22,11 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: bootstrapStyles },
 ];
 
-// Main App component with Keycloak integration
-function AppWithKeycloak() {
-  // Only render KeycloakProvider on the client side
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  return isClient ? (
-    <KeycloakProvider>
-      <div className="d-flex flex-column min-vh-100">
-        <Navbar />
-        <div className="container-fluid flex-grow-1 py-3">
-          <Outlet />
-        </div>
-      </div>
-    </KeycloakProvider>
-  ) : (
+// Main App component
+function AppLayout() {
+  return (
     <div className="d-flex flex-column min-vh-100">
+      <Navbar />
       <div className="container-fluid flex-grow-1 py-3">
         <Outlet />
       </div>
@@ -60,7 +44,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AppWithKeycloak />
+        <AppLayout />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
