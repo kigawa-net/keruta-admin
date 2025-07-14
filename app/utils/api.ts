@@ -99,7 +99,7 @@ export async function apiPut<T>(clientState: LoadedClientState, endpoint: string
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiDelete<T>(clientState: LoadedClientState, endpoint: string): Promise<T> {
+export async function apiDelete<T>(clientState: LoadedClientState, endpoint: string): Promise<T | void> {
     // Use the API URL from backendConfig
     const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
@@ -112,5 +112,12 @@ export async function apiDelete<T>(clientState: LoadedClientState, endpoint: str
         throw new ApiError(`API request failed: ${response.statusText}`, response.status);
     }
 
-    return response.json();
+    // Check if response has content before trying to parse JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        return response.json();
+    }
+    
+    // Return void for empty responses
+    return;
 }

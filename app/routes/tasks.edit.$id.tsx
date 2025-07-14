@@ -105,7 +105,7 @@ export default function EditTask() {
           </div>
           <div className="card-body">
             {error && (
-              <div className="alert alert-danger" role="alert">
+              <div className="text-danger mb-3">
                 {error}
               </div>
             )}
@@ -183,7 +183,7 @@ export default function EditTask() {
                 </div>
               </Form>
             ) : (
-              <div className="alert alert-warning" role="alert">
+              <div className="text-warning mb-3">
                 タスクが見つかりませんでした。
               </div>
             )}

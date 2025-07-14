@@ -47,7 +47,7 @@ export default function ExampleApiComponent() {
             {loading && <p>読み込み中...</p>}
 
             {error && (
-                <div className="alert alert-danger" role="alert">
+                <div className="text-danger mb-3">
                     {error}
                 </div>
             )}

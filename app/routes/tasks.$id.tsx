@@ -103,10 +103,8 @@ export default function TaskDetails() {
         await apiDelete(clientState, `tasks/${taskId}`);
         // 削除成功後、タスク一覧ページに戻る
         navigate("/tasks");
-        alert("タスクが正常に削除されました。");
       } catch (err) {
         console.error("タスクの削除に失敗しました:", err);
-        alert("タスクの削除に失敗しました。");
       }
     }
   };
@@ -145,13 +143,13 @@ export default function TaskDetails() {
         )}
 
         {error && (
-          <div className="alert alert-danger" role="alert">
+          <div className="text-danger mb-3">
             {error}
           </div>
         )}
 
         {!loading && !error && !task && (
-          <div className="alert alert-warning" role="alert">
+          <div className="text-warning mb-3">
             タスクが見つかりませんでした。
           </div>
         )}

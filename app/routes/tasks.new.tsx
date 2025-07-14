@@ -58,7 +58,7 @@ export default function NewTask() {
           </div>
           <div className="card-body">
             {error && (
-              <div className="alert alert-danger" role="alert">
+              <div className="text-danger mb-3">
                 {error}
               </div>
             )}
