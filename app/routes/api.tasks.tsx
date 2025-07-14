@@ -10,7 +10,7 @@ export const loader: LoaderFunction = async ({request}) => {
     const clientState = await loadClientState()
     try {
         // Construct the backend API URL
-        const url = `${clientState.backendUrl}/api/v1/tasks`;
+        const url = `${clientState.apiUrl}/tasks`;
 
         // Make the request to the backend API
         const response = await fetch(url, createFetchOptions(clientState, {method: 'GET'}));

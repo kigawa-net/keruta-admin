@@ -60,7 +60,7 @@ export function getAuthToken(): string | undefined {
  */
 export function getBackendUrl(): string {
     // Use API_URL or BACKEND_URL environment variable if available, otherwise use default
-    return process.env.PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
+    return process.env.PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:8080';
 }
 /**
  * Get the complete API URL including version
