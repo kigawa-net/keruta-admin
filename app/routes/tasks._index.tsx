@@ -102,6 +102,8 @@ export default function Tasks() {
 
     // タスク削除のハンドラ
     const handleDelete = async (taskId: string, taskTitle: string) => {
+        if (clientState.state === "loading") return;
+
         if (window.confirm(`タスク「${taskTitle}」を削除してもよろしいですか？`)) {
             try {
                 await apiDelete(clientState, `tasks/${taskId}`);

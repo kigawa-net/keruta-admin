@@ -68,6 +68,8 @@ export default function EditTask() {
   // フォーム送信ハンドラ
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (clientState.state === "loading") return;
+
     setLoading(true);
     setError(null);
 

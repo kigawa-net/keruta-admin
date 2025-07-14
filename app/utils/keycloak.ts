@@ -101,7 +101,7 @@ function setupTokenRefresh(kc: Keycloak.default): void {
   // Setup token refresh
   setInterval(() => {
     kc.updateToken(70)
-      .then((refreshed) => {
+      .then((refreshed: boolean) => {
         if (refreshed) {
           console.log('Token refreshed');
         }

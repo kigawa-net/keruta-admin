@@ -50,7 +50,7 @@ export async function apiGet<T>(clientState: LoadedClientState
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiPost<T>(clientState: LoadedClientState, endpoint: string, data: any): Promise<T> {
+export async function apiPost<T, D = Record<string, unknown>>(clientState: LoadedClientState, endpoint: string, data: D): Promise<T> {
     // Use the API URL from backendConfig
     const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
@@ -75,7 +75,7 @@ export async function apiPost<T>(clientState: LoadedClientState, endpoint: strin
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiPut<T>(clientState: LoadedClientState, endpoint: string, data: any): Promise<T> {
+export async function apiPut<T, D = Record<string, unknown>>(clientState: LoadedClientState, endpoint: string, data: D): Promise<T> {
     // Use the API URL from backendConfig
     const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
@@ -117,7 +117,7 @@ export async function apiDelete<T>(clientState: LoadedClientState, endpoint: str
     if (contentType && contentType.includes('application/json')) {
         return response.json();
     }
-    
+
     // Return void for empty responses
     return;
 }
