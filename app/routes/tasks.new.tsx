@@ -3,7 +3,7 @@ import type { MetaFunction } from "@remix-run/node";
 import { Form, useNavigate } from "@remix-run/react";
 import Layout from "~/components/Layout";
 import { apiPost } from "~/utils/api";
-import { ClientState, useClient } from "~/components/Client";
+import { useClient } from "~/components/Client";
 
 export const meta: MetaFunction = () => {
   return [
