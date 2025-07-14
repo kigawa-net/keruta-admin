@@ -89,9 +89,9 @@ export default function NewTask() {
 
               <div className="mb-3">
                 <label htmlFor="priority" className="form-label">優先度</label>
-                <select className="form-select" id="priority" name="priority">
+                <select className="form-select" id="priority" name="priority" defaultValue="1">
                   <option value="0">低</option>
-                  <option value="1" selected>中</option>
+                  <option value="1">中</option>
                   <option value="2">高</option>
                 </select>
               </div>

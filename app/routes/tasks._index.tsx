@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import type {MetaFunction} from "@remix-run/node";
 import Layout from "~/components/Layout";
-import {apiGet} from "~/utils/api";
+import {apiDelete, apiGet} from "~/utils/api";
 import {ClientState, useClient} from "~/components/Client";
 
 export const meta: MetaFunction = () => {
@@ -100,6 +100,31 @@ export default function Tasks() {
         fetchTasks(clientState);
     };
 
+    // タスク削除のハンドラ
+    const handleDelete = async (taskId: string, taskTitle: string) => {
+        if (window.confirm(`タスク「${taskTitle}」を削除してもよろしいですか？`)) {
+            try {
+                await apiDelete(clientState, `tasks/${taskId}`);
+                // 削除成功後、タスク一覧を再取得
+                fetchTasks(clientState);
+                alert("タスクが正常に削除されました。");
+            } catch (err) {
+                console.error("タスクの削除に失敗しました:", err);
+                alert("タスクの削除に失敗しました。");
+            }
+        }
+    };
+
+    // タスク編集ページへの遷移ハンドラ
+    const handleEdit = (taskId: string) => {
+        window.location.href = `/tasks/edit/${taskId}`;
+    };
+
+    // タスク詳細ページへの遷移ハンドラ
+    const handleDetails = (taskId: string) => {
+        window.location.href = `/tasks/${taskId}`;
+    };
+
     return (
         <Layout>
             <div className="tasks">
@@ -173,9 +198,24 @@ export default function Tasks() {
                                             <td>{formatDate(task.createdAt)}</td>
                                             <td>{formatDate(task.updatedAt)}</td>
                                             <td>
-                                                <button className="btn btn-sm btn-outline-primary me-1">詳細</button>
-                                                <button className="btn btn-sm btn-outline-secondary me-1">編集</button>
-                                                <button className="btn btn-sm btn-outline-danger">削除</button>
+                                                <button
+                                                    className="btn btn-sm btn-outline-primary me-1"
+                                                    onClick={() => handleDetails(task.id)}
+                                                >
+                                                    詳細
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-outline-secondary me-1"
+                                                    onClick={() => handleEdit(task.id)}
+                                                >
+                                                    編集
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-outline-danger"
+                                                    onClick={() => handleDelete(task.id, task.title)}
+                                                >
+                                                    削除
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
