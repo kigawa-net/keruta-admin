@@ -6,7 +6,7 @@ import {loadClientState} from "~/components/Client";
  * Server-side loader function to proxy requests to the backend API
  * This avoids CORS issues by having the server make the request instead of the client
  */
-export const loader: LoaderFunction = async ({request}) => {
+export const loader: LoaderFunction = async () => {
     const clientState = await loadClientState()
     try {
         // Construct the backend API URL

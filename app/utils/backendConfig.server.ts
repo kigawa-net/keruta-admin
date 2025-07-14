@@ -7,8 +7,6 @@
  */
 
 import jwt from 'jsonwebtoken';
-import {defaultFetchOptions} from "~/utils/apiConfig";
-import {LoadedClientState} from "~/components/Client";
 
 /**
  * Generate a JWT token using the JWT_SECRET environment variable
