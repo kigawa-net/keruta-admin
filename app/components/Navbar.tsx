@@ -27,6 +27,9 @@ export const Navbar: React.FC = () => {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
+              <Link className="nav-link" to="/">ダッシュボード</Link>
+            </li>
+            <li className="nav-item">
               <Link className="nav-link" to="/tasks">タスク</Link>
             </li>
             <li className="nav-item">
