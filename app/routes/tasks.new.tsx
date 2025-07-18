@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { Form, useNavigate } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { apiPost } from "~/utils/api";
+import { apiPost, apiGet } from "~/utils/api";
 import { useClient } from "~/components/Client";
 
 export const meta: MetaFunction = () => {
@@ -12,11 +12,38 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+interface Session {
+  id: string;
+  name: string;
+  status: string;
+}
+
 export default function NewTask() {
   const navigate = useNavigate();
   const clientState = useClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+
+  // セッション一覧を取得
+  const fetchSessions = async () => {
+    if (clientState.state === "loading") return;
+    
+    try {
+      setSessionsLoading(true);
+      const data = await apiGet<Session[]>(clientState, "sessions");
+      setSessions(data);
+    } catch (err) {
+      console.error("セッション一覧の取得に失敗しました:", err);
+    } finally {
+      setSessionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSessions();
+  }, [clientState]);
 
   // フォーム送信ハンドラ
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -33,6 +60,7 @@ export default function NewTask() {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
       priority: parseInt(formData.get("priority") as string) || 0,
+      session: formData.get("session") as string,
       // 必要に応じて他のフィールドを追加
     };
 
@@ -96,6 +124,19 @@ export default function NewTask() {
                   <option value="1">中</option>
                   <option value="2">高</option>
                 </select>
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="session" className="form-label">セッション <span className="text-danger">*</span></label>
+                <select className="form-select" id="session" name="session" required>
+                  <option value="">セッションを選択してください</option>
+                  {sessions.map((session) => (
+                    <option key={session.id} value={session.id}>
+                      {session.name} ({session.status})
+                    </option>
+                  ))}
+                </select>
+                {sessionsLoading && <div className="form-text">セッションを読み込み中...</div>}
               </div>
 
               <div className="d-flex justify-content-between">

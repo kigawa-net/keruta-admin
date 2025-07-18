@@ -29,8 +29,16 @@ interface Task {
     agentId: string | null;
     repositoryId: string | null;
     parentId: string | null;
+    session: string;
     createdAt: string;
     updatedAt: string;
+}
+
+// セッション情報の型定義
+interface Session {
+    id: string;
+    name: string;
+    status: string;
 }
 
 // ステータスに応じたバッジのスタイルを返す関数
@@ -67,7 +75,23 @@ export default function Tasks() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [sessions, setSessions] = useState<Record<string, Session>>({});
     const clientState = useClient()
+
+    // セッション一覧を取得する関数
+    const fetchSessions = async (clientState: ClientState) => {
+        if (clientState.state === "loading") return;
+        try {
+            const data = await apiGet<Session[]>(clientState, "sessions");
+            const sessionMap = data.reduce((acc, session) => {
+                acc[session.id] = session;
+                return acc;
+            }, {} as Record<string, Session>);
+            setSessions(sessionMap);
+        } catch (err) {
+            console.error("セッション一覧の取得に失敗しました:", err);
+        }
+    };
 
     // タスク一覧を取得する関数
     const fetchTasks = async (clientState: ClientState) => {
@@ -90,8 +114,9 @@ export default function Tasks() {
         }
     };
 
-    // コンポーネントのマウント時にタスク一覧を取得
+    // コンポーネントのマウント時にタスク一覧とセッション一覧を取得
     useEffect(() => {
+        fetchSessions(clientState);
         fetchTasks(clientState);
     }, [clientState]);
 
@@ -179,6 +204,7 @@ export default function Tasks() {
                                     <tr>
                                         <th>ID</th>
                                         <th>名前</th>
+                                        <th>セッション</th>
                                         <th>ステータス</th>
                                         <th>作成日時</th>
                                         <th>更新日時</th>
@@ -190,6 +216,15 @@ export default function Tasks() {
                                         <tr key={task.id}>
                                             <td>{task.id}</td>
                                             <td>{task.title}</td>
+                                            <td>
+                                                {sessions[task.session] ? (
+                                                    <span className="badge bg-info text-dark">
+                                                        {sessions[task.session].name}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted">不明</span>
+                                                )}
+                                            </td>
                                             <td>
                           <span className={`badge ${getStatusBadgeClass(task.status)}`}>
                             {task.status}
