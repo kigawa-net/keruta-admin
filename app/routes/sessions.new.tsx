@@ -94,11 +94,6 @@ export default function NewSession() {
             <h5 className="card-title">セッション情報</h5>
           </div>
           <div className="card-body">
-            {error && (
-              <div className="alert alert-danger" role="alert">
-                {error}
-              </div>
-            )}
 
             <Form onSubmit={handleSubmit}>
               <div className="mb-3">

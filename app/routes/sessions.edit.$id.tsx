@@ -138,9 +138,9 @@ export default function EditSession() {
   if (!session) {
     return (
       <Layout>
-        <div className="alert alert-danger" role="alert">
+        <p className="text-muted">
           セッションが見つかりません。
-        </div>
+        </p>
       </Layout>
     );
   }
@@ -155,11 +155,6 @@ export default function EditSession() {
             <h5 className="card-title">セッション情報 (ID: {session.id})</h5>
           </div>
           <div className="card-body">
-            {error && (
-              <div className="alert alert-danger" role="alert">
-                {error}
-              </div>
-            )}
 
             <Form onSubmit={handleSubmit}>
               <div className="mb-3">

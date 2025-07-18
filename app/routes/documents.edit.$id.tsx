@@ -132,17 +132,7 @@ export default function EditDocument() {
           </div>
         </div>
 
-        {loaderError && (
-          <div className="alert alert-danger" role="alert">
-            {loaderError}
-          </div>
-        )}
 
-        {actionData?.errors?.form && (
-          <div className="alert alert-danger" role="alert">
-            {actionData.errors.form}
-          </div>
-        )}
 
         {document ? (
           <div className="card">
@@ -216,9 +206,9 @@ export default function EditDocument() {
             </div>
           </div>
         ) : !loaderError && (
-          <div className="alert alert-info">
+          <p className="text-muted">
             ドキュメントを読み込んでいます...
-          </div>
+          </p>
         )}
       </div>
     </Layout>

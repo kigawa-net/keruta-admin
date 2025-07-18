@@ -66,11 +66,6 @@ export default function DocumentDetails() {
           </div>
         </div>
 
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            {error}
-          </div>
-        )}
 
         {document ? (
           <div className="card">
@@ -106,9 +101,9 @@ export default function DocumentDetails() {
             </div>
           </div>
         ) : !error && (
-          <div className="alert alert-info">
+          <p className="text-muted">
             ドキュメントを読み込んでいます...
-          </div>
+          </p>
         )}
       </div>
     </Layout>

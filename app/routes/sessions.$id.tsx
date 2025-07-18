@@ -147,9 +147,9 @@ export default function SessionDetails() {
   if (error || !session) {
     return (
       <Layout>
-        <div className="alert alert-danger" role="alert">
+        <p className="text-muted">
           {error || "セッションが見つかりません。"}
-        </div>
+        </p>
       </Layout>
     );
   }

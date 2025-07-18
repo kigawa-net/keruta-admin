@@ -95,7 +95,7 @@ export default function Documents() {
       window.location.reload();
     } catch (error) {
       console.error("Failed to delete document:", error);
-      alert("ドキュメントの削除に失敗しました。");
+      console.error("ドキュメントの削除に失敗しました。");
     }
   };
 
@@ -110,11 +110,6 @@ export default function Documents() {
       <div className="documents">
         <h2>ドキュメント管理</h2>
 
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            {error}
-          </div>
-        )}
 
         <div className="d-flex justify-content-between mb-3">
           <div>
@@ -230,9 +225,9 @@ export default function Documents() {
                     ))}
                   </div>
                 ) : (
-                  <div className="alert alert-info">
+                  <p className="text-muted">
                     ドキュメントが見つかりません。新しいドキュメントを作成してください。
-                  </div>
+                  </p>
                 )}
 
                 {/* Pagination can be implemented here if needed */}

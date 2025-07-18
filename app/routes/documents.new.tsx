@@ -75,11 +75,6 @@ export default function NewDocument() {
       <div className="new-document">
         <h2>新規ドキュメント作成</h2>
 
-        {actionData?.errors?.form && (
-          <div className="alert alert-danger" role="alert">
-            {actionData.errors.form}
-          </div>
-        )}
 
         <div className="card">
           <div className="card-body">
