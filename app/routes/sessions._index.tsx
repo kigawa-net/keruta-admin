@@ -1,8 +1,9 @@
 import {useEffect, useState} from "react";
 import type {MetaFunction} from "@remix-run/node";
 import Layout from "~/components/Layout";
-import {apiDelete, apiGet} from "~/utils/api";
+import {apiDelete, getSessions} from "~/utils/api";
 import {ClientState, useClient} from "~/components/Client";
+import {Session} from "~/types";
 
 export const meta: MetaFunction = () => {
     return [
@@ -11,17 +12,7 @@ export const meta: MetaFunction = () => {
     ];
 };
 
-// セッションデータの型定義
-interface Session {
-    id: string;
-    name: string;
-    description: string | null;
-    status: string;
-    tags: string[];
-    metadata: Record<string, string>;
-    createdAt: string;
-    updatedAt: string;
-}
+// Remove local Session interface - using the one from types
 
 // ステータスに応じたバッジのスタイルを返す関数
 function getStatusBadgeClass(status: string): string {
@@ -79,8 +70,8 @@ export default function Sessions() {
         console.debug("fetch sessions 2")
         try {
             setLoading(true);
-            // Use the apiGet function which now uses the server-side API proxy route
-            const data = await apiGet<Session[]>(clientState, "sessions");
+            // Use the getSessions function which now uses the server-side API proxy route
+            const data = await getSessions(clientState);
             console.debug("fetch sessions 3")
             setSessions(data);
             setError(null);
@@ -184,6 +175,7 @@ export default function Sessions() {
                                         <th>名前</th>
                                         <th>説明</th>
                                         <th>ステータス</th>
+                                        <th>テンプレート</th>
                                         <th>タグ</th>
                                         <th>作成日時</th>
                                         <th>更新日時</th>
@@ -200,6 +192,31 @@ export default function Sessions() {
                           <span className={`badge ${getStatusBadgeClass(session.status)}`}>
                             {session.status}
                           </span>
+                                            </td>
+                                            <td>
+                                                {session.templateConfig ? (
+                                                    <div className="small">
+                                                        {session.templateConfig.templateId ? (
+                                                            <span className="badge bg-info text-dark me-1">
+                                                                ID: {session.templateConfig.templateId}
+                                                            </span>
+                                                        ) : session.templateConfig.templateName ? (
+                                                            <span className="badge bg-success text-white me-1">
+                                                                Name: {session.templateConfig.templateName}
+                                                            </span>
+                                                        ) : session.templateConfig.preferredKeywords.length > 0 ? (
+                                                            <span className="badge bg-warning text-dark me-1">
+                                                                Keywords: {session.templateConfig.preferredKeywords.join(", ")}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="badge bg-secondary text-white me-1">
+                                                                Default
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted">なし</span>
+                                                )}
                                             </td>
                                             <td>
                                                 {session.tags.length > 0 ? (

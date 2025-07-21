@@ -7,6 +7,7 @@
 
 import {LoadedClientState} from "~/components/Client";
 import {createFetchOptions} from "~/utils/apiConfig";
+import {CoderTemplate, Session, SessionFormData} from "~/types";
 
 /**
  * Generic API error class
@@ -120,4 +121,34 @@ export async function apiDelete<T>(clientState: LoadedClientState, endpoint: str
 
     // Return void for empty responses
     return;
+}
+
+// Session API Functions
+export async function getSessions(clientState: LoadedClientState): Promise<Session[]> {
+    return apiGet<Session[]>(clientState, "sessions");
+}
+
+export async function getSession(clientState: LoadedClientState, sessionId: string): Promise<Session> {
+    return apiGet<Session>(clientState, `sessions/${sessionId}`);
+}
+
+export async function createSession(clientState: LoadedClientState, session: SessionFormData): Promise<Session> {
+    return apiPost<Session, SessionFormData>(clientState, "sessions", session);
+}
+
+export async function updateSession(clientState: LoadedClientState, sessionId: string, session: SessionFormData): Promise<Session> {
+    return apiPut<Session, SessionFormData>(clientState, `sessions/${sessionId}`, session);
+}
+
+export async function deleteSession(clientState: LoadedClientState, sessionId: string): Promise<void> {
+    return apiDelete(clientState, `sessions/${sessionId}`);
+}
+
+// Coder Template API Functions
+export async function getCoderTemplates(clientState: LoadedClientState): Promise<CoderTemplate[]> {
+    return apiGet<CoderTemplate[]>(clientState, "coder/templates");
+}
+
+export async function getCoderTemplate(clientState: LoadedClientState, templateId: string): Promise<CoderTemplate> {
+    return apiGet<CoderTemplate>(clientState, `coder/templates/${templateId}`);
 }

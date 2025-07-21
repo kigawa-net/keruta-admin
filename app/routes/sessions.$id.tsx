@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { apiGet, apiDelete } from "~/utils/api";
+import { getSession, deleteSession } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
+import { Session } from "~/types";
 
 export const meta: MetaFunction = () => {
   return [
@@ -12,17 +13,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-// セッションデータの型定義
-interface Session {
-  id: string;
-  name: string;
-  description: string | null;
-  status: string;
-  tags: string[];
-  metadata: Record<string, string>;
-  createdAt: string;
-  updatedAt: string;
-}
+// Remove local Session interface - using the one from types
 
 // タスクデータの型定義
 interface Task {
@@ -84,7 +75,7 @@ export default function SessionDetails() {
 
     try {
       setLoading(true);
-      const data = await apiGet<Session>(clientState, `sessions/${id}`);
+      const data = await getSession(clientState, id);
       setSession(data);
       setError(null);
     } catch (err) {
@@ -122,7 +113,7 @@ export default function SessionDetails() {
 
     if (window.confirm(`セッション「${session.name}」を削除してもよろしいですか？`)) {
       try {
-        await apiDelete(clientState, `sessions/${session.id}`);
+        await deleteSession(clientState, session.id);
         navigate("/sessions");
       } catch (err) {
         console.error("セッションの削除に失敗しました:", err);
@@ -282,6 +273,107 @@ export default function SessionDetails() {
             )}
           </div>
         </div>
+
+        {/* Template Configuration */}
+        {session.templateConfig && (
+          <div className="card mb-4">
+            <div className="card-header">
+              <h5 className="card-title">Coderテンプレート設定</h5>
+            </div>
+            <div className="card-body">
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <table className="table table-borderless">
+                    <tbody>
+                      {session.templateConfig.templateId && (
+                        <tr>
+                          <th scope="row" style={{width: "40%"}}>テンプレートID:</th>
+                          <td>
+                            <span className="badge bg-info text-dark">
+                              {session.templateConfig.templateId}
+                            </span>
+                          </td>
+                        </tr>
+                      )}
+                      {session.templateConfig.templateName && (
+                        <tr>
+                          <th scope="row">テンプレート名:</th>
+                          <td>
+                            <span className="badge bg-success text-white">
+                              {session.templateConfig.templateName}
+                            </span>
+                          </td>
+                        </tr>
+                      )}
+                      {session.templateConfig.repositoryUrl && (
+                        <tr>
+                          <th scope="row">リポジトリURL:</th>
+                          <td>
+                            <a href={session.templateConfig.repositoryUrl} target="_blank" rel="noopener noreferrer">
+                              {session.templateConfig.repositoryUrl}
+                            </a>
+                          </td>
+                        </tr>
+                      )}
+                      <tr>
+                        <th scope="row">リポジトリRef:</th>
+                        <td><code>{session.templateConfig.repositoryRef}</code></td>
+                      </tr>
+                      <tr>
+                        <th scope="row">テンプレートパス:</th>
+                        <td><code>{session.templateConfig.templatePath || "/"}</code></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div className="col-md-6">
+                  {/* Preferred Keywords */}
+                  <div className="mb-3">
+                    <h6>優先キーワード</h6>
+                    {session.templateConfig.preferredKeywords.length > 0 ? (
+                      <div className="d-flex flex-wrap">
+                        {session.templateConfig.preferredKeywords.map((keyword, index) => (
+                          <span key={index} className="badge bg-warning text-dark me-2 mb-2">
+                            {keyword}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted">なし</p>
+                    )}
+                  </div>
+
+                  {/* Template Parameters */}
+                  <div className="mb-3">
+                    <h6>テンプレートパラメータ</h6>
+                    {Object.keys(session.templateConfig.parameters).length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="table table-sm table-striped">
+                          <thead>
+                            <tr>
+                              <th>パラメータ名</th>
+                              <th>値</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(session.templateConfig.parameters).map(([key, value]) => (
+                              <tr key={key}>
+                                <td><code>{key}</code></td>
+                                <td>{value}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-muted">なし</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 関連タスク */}
         <div className="card">
