@@ -152,3 +152,12 @@ export async function getCoderTemplates(clientState: LoadedClientState): Promise
 export async function getCoderTemplate(clientState: LoadedClientState, templateId: string): Promise<CoderTemplate> {
     return apiGet<CoderTemplate>(clientState, `coder/templates/${templateId}`);
 }
+
+// Template content API Functions
+export async function getTemplateContent(clientState: LoadedClientState, templatePath: string): Promise<{content: string}> {
+    return apiGet<{content: string}>(clientState, `templates/content?path=${encodeURIComponent(templatePath)}`);
+}
+
+export async function updateTemplateContent(clientState: LoadedClientState, templatePath: string, content: string): Promise<{success: boolean}> {
+    return apiPut<{success: boolean}, {content: string}>(clientState, `templates/content?path=${encodeURIComponent(templatePath)}`, {content});
+}

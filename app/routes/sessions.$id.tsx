@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { getSession, deleteSession } from "~/utils/api";
+import { getSession, deleteSession, apiGet } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
 import { Session } from "~/types";
 
@@ -277,8 +277,18 @@ export default function SessionDetails() {
         {/* Terraform Template Configuration */}
         {session.terraformTemplateConfig && (
           <div className="card mb-4">
-            <div className="card-header">
+            <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="card-title">Terraformテンプレート設定</h5>
+              {session.terraformTemplateConfig.enabled && session.terraformTemplateConfig.templatePath && (
+                <button
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => navigate(`/sessions/edit/${session.id}#template-editor`)}
+                  title="セッション編集画面でmain.tfを編集"
+                >
+                  <i className="bi bi-pencil me-1"></i>
+                  main.tf編集
+                </button>
+              )}
             </div>
             <div className="card-body">
               <div className="row mb-3">

@@ -241,6 +241,15 @@ export default function Sessions() {
                                                 >
                                                     編集
                                                 </button>
+                                                {session.terraformTemplateConfig?.enabled && session.terraformTemplateConfig?.templatePath && (
+                                                    <button
+                                                        className="btn btn-sm btn-outline-info me-1"
+                                                        onClick={() => window.location.href = `/sessions/edit/${session.id}#template-editor`}
+                                                        title="main.tf編集"
+                                                    >
+                                                        <i className="bi bi-file-code"></i>
+                                                    </button>
+                                                )}
                                                 <button
                                                     className="btn btn-sm btn-outline-danger"
                                                     onClick={() => handleDelete(session.id, session.name)}

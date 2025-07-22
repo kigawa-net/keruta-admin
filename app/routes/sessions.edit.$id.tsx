@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { Form, useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { getSession, updateSession } from "~/utils/api";
+import { getSession, updateSession, getTemplateContent, updateTemplateContent } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
 import { Session, TerraformTemplateConfig } from "~/types";
 
@@ -38,6 +38,12 @@ export default function EditSession() {
   });
   const [varKey, setVarKey] = useState("");
   const [varValue, setVarValue] = useState("");
+  
+  // Template content state
+  const [templateContent, setTemplateContent] = useState("");
+  const [templateLoading, setTemplateLoading] = useState(false);
+  const [templateError, setTemplateError] = useState<string | null>(null);
+  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
 
   // セッション情報を取得
   const fetchSession = async (clientState: ClientState) => {
@@ -118,6 +124,47 @@ export default function EditSession() {
       variables: newVariables
     });
   };
+
+  // Template content handlers
+  const loadTemplateContent = async () => {
+    if (clientState.state === "loading" || !terraformConfig.templatePath) return;
+    
+    try {
+      setTemplateLoading(true);
+      setTemplateError(null);
+      const mainTfPath = `${terraformConfig.templatePath}/main.tf`;
+      const data = await getTemplateContent(clientState, mainTfPath);
+      setTemplateContent(data.content);
+    } catch (err) {
+      console.error("Failed to load template content:", err);
+      setTemplateError(err instanceof Error ? err.message : "テンプレートの読み込みに失敗しました。");
+    } finally {
+      setTemplateLoading(false);
+    }
+  };
+
+  const saveTemplateContent = async () => {
+    if (clientState.state === "loading" || !terraformConfig.templatePath) return;
+    
+    try {
+      setTemplateLoading(true);
+      setTemplateError(null);
+      const mainTfPath = `${terraformConfig.templatePath}/main.tf`;
+      await updateTemplateContent(clientState, mainTfPath, templateContent);
+      alert("テンプレートが保存されました。");
+    } catch (err) {
+      console.error("Failed to save template content:", err);
+      setTemplateError(err instanceof Error ? err.message : "テンプレートの保存に失敗しました。");
+    } finally {
+      setTemplateLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showTemplateEditor && terraformConfig.templatePath && !templateContent) {
+      loadTemplateContent();
+    }
+  }, [showTemplateEditor, terraformConfig.templatePath, clientState]);
 
   // フォーム送信ハンドラ
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -456,6 +503,104 @@ export default function EditSession() {
                   </div>
                 </div>
               </div>
+
+              {/* Template Editor Section */}
+              {terraformConfig.enabled && terraformConfig.templatePath && (
+                <div className="mb-3">
+                  <label className="form-label">main.tf編集</label>
+                  <div className="card">
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <h6 className="card-title mb-0">
+                        {terraformConfig.templatePath}/main.tf
+                        {templateContent && (
+                          <small className="text-muted ms-2">
+                            ({templateContent.split('\n').length}行, {templateContent.length}文字)
+                          </small>
+                        )}
+                      </h6>
+                      <div className="d-flex gap-2">
+                        {!showTemplateEditor ? (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => setShowTemplateEditor(true)}
+                            disabled={templateLoading}
+                          >
+                            編集
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-success"
+                              onClick={saveTemplateContent}
+                              disabled={templateLoading}
+                            >
+                              {templateLoading ? '保存中...' : '保存'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={() => setShowTemplateEditor(false)}
+                              disabled={templateLoading}
+                            >
+                              閉じる
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {showTemplateEditor && (
+                      <div className="card-body p-0">
+                        {templateError && (
+                          <div className="alert alert-danger m-3 mb-0">
+                            {templateError}
+                          </div>
+                        )}
+                        
+                        {templateLoading ? (
+                          <div className="d-flex justify-content-center align-items-center p-4">
+                            <div className="spinner-border" role="status">
+                              <span className="visually-hidden">読み込み中...</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <textarea
+                            value={templateContent}
+                            onChange={(e) => setTemplateContent(e.target.value)}
+                            className="form-control border-0"
+                            style={{
+                              minHeight: "400px",
+                              fontFamily: "'Source Code Pro', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
+                              fontSize: "14px",
+                              resize: "vertical",
+                              lineHeight: "1.5",
+                              tabSize: 2
+                            }}
+                            placeholder="Terraformコードを入力してください..."
+                            onKeyDown={(e) => {
+                              // Tab キーでインデント挿入
+                              if (e.key === 'Tab') {
+                                e.preventDefault();
+                                const start = e.currentTarget.selectionStart;
+                                const end = e.currentTarget.selectionEnd;
+                                const value = e.currentTarget.value;
+                                const newValue = value.substring(0, start) + '  ' + value.substring(end);
+                                setTemplateContent(newValue);
+                                // カーソル位置を調整
+                                setTimeout(() => {
+                                  e.currentTarget.setSelectionRange(start + 2, start + 2);
+                                });
+                              }
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {error && (
                 <div className="alert alert-danger" role="alert">
