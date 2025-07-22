@@ -37,6 +37,7 @@ export default function Index() {
                   <a href="/tasks" className="list-group-item list-group-item-action">タスク管理</a>
                   <a href="/documents" className="list-group-item list-group-item-action">ドキュメント管理</a>
                   <a href="/repositories" className="list-group-item list-group-item-action">リポジトリ管理</a>
+                  <a href="/templates" className="list-group-item list-group-item-action">テンプレート管理</a>
                   <a href="/kubernetes" className="list-group-item list-group-item-action">Kubernetes設定</a>
                   <a href="/agents" className="list-group-item list-group-item-action">エージェント管理</a>
                 </div>

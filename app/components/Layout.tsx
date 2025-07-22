@@ -47,6 +47,11 @@ export default function Layout({ children }: LayoutProps) {
                 </Link>
               </li>
               <li className="nav-item">
+                <Link to="/templates" className="nav-link">
+                  テンプレート管理
+                </Link>
+              </li>
+              <li className="nav-item">
                 <Link to="/kubernetes" className="nav-link">
                   Kubernetes設定
                 </Link>
