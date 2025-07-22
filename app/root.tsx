@@ -5,8 +5,6 @@ import {Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useLoaderDa
 // Import Bootstrap CSS
 import bootstrapStyles from "bootstrap/dist/css/bootstrap.min.css";
 
-// Import Navbar
-import Navbar from "~/components/Navbar";
 import {ClientProvider, loadClientState, LoadedClientState} from "~/components/Client";
 
 export const links: LinksFunction = () => [
@@ -19,11 +17,8 @@ function AppLayout() {
     const loaderData = useLoaderData<typeof loader>()
     return (
         <ClientProvider clientState={loaderData.clientState}>
-            <div className="d-flex flex-column min-vh-100">
-                <Navbar/>
-                <div className="container-fluid flex-grow-1 py-3">
-                    <Outlet/>
-                </div>
+            <div className="min-vh-100">
+                <Outlet/>
             </div>
         </ClientProvider>
     );

@@ -22,8 +22,18 @@ export default function Layout({ children }: LayoutProps) {
                 </Link>
               </li>
               <li className="nav-item">
+                <Link to="/sessions" className="nav-link">
+                  セッション管理
+                </Link>
+              </li>
+              <li className="nav-item">
                 <Link to="/tasks" className="nav-link">
                   タスク管理
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/agents" className="nav-link">
+                  エージェント管理
                 </Link>
               </li>
               <li className="nav-item">
@@ -39,11 +49,6 @@ export default function Layout({ children }: LayoutProps) {
               <li className="nav-item">
                 <Link to="/kubernetes" className="nav-link">
                   Kubernetes設定
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/agents" className="nav-link">
-                  エージェント管理
                 </Link>
               </li>
             </ul>
