@@ -3,14 +3,13 @@
  */
 
 // Session Types
-export interface SessionTemplateConfig {
-  templateId?: string;
-  templateName?: string;
-  repositoryUrl?: string;
-  repositoryRef: string;
+export interface TerraformTemplateConfig {
   templatePath: string;
-  preferredKeywords: string[];
-  parameters: Record<string, string>;
+  storageClassName?: string;
+  storageSize?: string;
+  mountPath?: string;
+  variables: Record<string, string>;
+  enabled: boolean;
 }
 
 export interface Session {
@@ -20,7 +19,7 @@ export interface Session {
   status: string;
   tags: string[];
   metadata: Record<string, string>;
-  templateConfig?: SessionTemplateConfig | null;
+  terraformTemplateConfig?: TerraformTemplateConfig | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -78,5 +77,5 @@ export interface SessionFormData {
   status: string;
   tags: string[];
   metadata: Record<string, string>;
-  templateConfig?: SessionTemplateConfig;
+  terraformTemplateConfig?: TerraformTemplateConfig;
 }

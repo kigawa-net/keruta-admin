@@ -274,89 +274,65 @@ export default function SessionDetails() {
           </div>
         </div>
 
-        {/* Template Configuration */}
-        {session.templateConfig && (
+        {/* Terraform Template Configuration */}
+        {session.terraformTemplateConfig && (
           <div className="card mb-4">
             <div className="card-header">
-              <h5 className="card-title">Coderテンプレート設定</h5>
+              <h5 className="card-title">Terraformテンプレート設定</h5>
             </div>
             <div className="card-body">
               <div className="row mb-3">
                 <div className="col-md-6">
                   <table className="table table-borderless">
                     <tbody>
-                      {session.templateConfig.templateId && (
-                        <tr>
-                          <th scope="row" style={{width: "40%"}}>テンプレートID:</th>
-                          <td>
-                            <span className="badge bg-info text-dark">
-                              {session.templateConfig.templateId}
-                            </span>
-                          </td>
-                        </tr>
-                      )}
-                      {session.templateConfig.templateName && (
-                        <tr>
-                          <th scope="row">テンプレート名:</th>
-                          <td>
-                            <span className="badge bg-success text-white">
-                              {session.templateConfig.templateName}
-                            </span>
-                          </td>
-                        </tr>
-                      )}
-                      {session.templateConfig.repositoryUrl && (
-                        <tr>
-                          <th scope="row">リポジトリURL:</th>
-                          <td>
-                            <a href={session.templateConfig.repositoryUrl} target="_blank" rel="noopener noreferrer">
-                              {session.templateConfig.repositoryUrl}
-                            </a>
-                          </td>
-                        </tr>
-                      )}
                       <tr>
-                        <th scope="row">リポジトリRef:</th>
-                        <td><code>{session.templateConfig.repositoryRef}</code></td>
+                        <th scope="row" style={{width: "40%"}}>有効:</th>
+                        <td>
+                          <span className={`badge ${session.terraformTemplateConfig.enabled ? 'bg-success' : 'bg-secondary'}`}>
+                            {session.terraformTemplateConfig.enabled ? '有効' : '無効'}
+                          </span>
+                        </td>
                       </tr>
                       <tr>
                         <th scope="row">テンプレートパス:</th>
-                        <td><code>{session.templateConfig.templatePath || "/"}</code></td>
+                        <td><code>{session.terraformTemplateConfig.templatePath}</code></td>
                       </tr>
+                      {session.terraformTemplateConfig.storageClassName && (
+                        <tr>
+                          <th scope="row">ストレージクラス:</th>
+                          <td><code>{session.terraformTemplateConfig.storageClassName}</code></td>
+                        </tr>
+                      )}
+                      {session.terraformTemplateConfig.storageSize && (
+                        <tr>
+                          <th scope="row">ストレージサイズ:</th>
+                          <td><code>{session.terraformTemplateConfig.storageSize}</code></td>
+                        </tr>
+                      )}
+                      {session.terraformTemplateConfig.mountPath && (
+                        <tr>
+                          <th scope="row">マウントパス:</th>
+                          <td><code>{session.terraformTemplateConfig.mountPath}</code></td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
                 <div className="col-md-6">
-                  {/* Preferred Keywords */}
+                  {/* Terraform Variables */}
                   <div className="mb-3">
-                    <h6>優先キーワード</h6>
-                    {session.templateConfig.preferredKeywords.length > 0 ? (
-                      <div className="d-flex flex-wrap">
-                        {session.templateConfig.preferredKeywords.map((keyword, index) => (
-                          <span key={index} className="badge bg-warning text-dark me-2 mb-2">
-                            {keyword}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-muted">なし</p>
-                    )}
-                  </div>
-
-                  {/* Template Parameters */}
-                  <div className="mb-3">
-                    <h6>テンプレートパラメータ</h6>
-                    {Object.keys(session.templateConfig.parameters).length > 0 ? (
+                    <h6>Terraform変数</h6>
+                    {Object.keys(session.terraformTemplateConfig.variables).length > 0 ? (
                       <div className="table-responsive">
                         <table className="table table-sm table-striped">
                           <thead>
                             <tr>
-                              <th>パラメータ名</th>
+                              <th>変数名</th>
                               <th>値</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {Object.entries(session.templateConfig.parameters).map(([key, value]) => (
+                            {Object.entries(session.terraformTemplateConfig.variables).map(([key, value]) => (
                               <tr key={key}>
                                 <td><code>{key}</code></td>
                                 <td>{value}</td>

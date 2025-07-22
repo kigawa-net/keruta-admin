@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { Form, useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { getSession, updateSession, getCoderTemplates } from "~/utils/api";
+import { getSession, updateSession } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
-import { Session, SessionTemplateConfig, CoderTemplate } from "~/types";
+import { Session, TerraformTemplateConfig } from "~/types";
 
 export const meta: MetaFunction = () => {
   return [
@@ -12,8 +12,6 @@ export const meta: MetaFunction = () => {
     { name: "description", content: "セッションを編集します" },
   ];
 };
-
-// Remove local Session interface - using the one from types
 
 export default function EditSession() {
   const navigate = useNavigate();
@@ -29,17 +27,17 @@ export default function EditSession() {
   const [metadataKey, setMetadataKey] = useState("");
   const [metadataValue, setMetadataValue] = useState("");
   
-  // Template configuration state
-  const [templateConfig, setTemplateConfig] = useState<SessionTemplateConfig>({
-    repositoryRef: "main",
-    templatePath: "",
-    preferredKeywords: [],
-    parameters: {}
+  // Terraform template configuration state
+  const [terraformConfig, setTerraformConfig] = useState<TerraformTemplateConfig>({
+    templatePath: "/terraform-templates/coder-workspace",
+    storageClassName: "standard",
+    storageSize: "10Gi",
+    mountPath: "/home/coder/shared",
+    variables: {},
+    enabled: false
   });
-  const [availableTemplates, setAvailableTemplates] = useState<CoderTemplate[]>([]);
-  const [keywordInput, setKeywordInput] = useState("");
-  const [paramKey, setParamKey] = useState("");
-  const [paramValue, setParamValue] = useState("");
+  const [varKey, setVarKey] = useState("");
+  const [varValue, setVarValue] = useState("");
 
   // セッション情報を取得
   const fetchSession = async (clientState: ClientState) => {
@@ -52,35 +50,20 @@ export default function EditSession() {
       setTags(data.tags || []);
       setMetadata(data.metadata || {});
       
-      // Set template configuration if it exists
-      if (data.templateConfig) {
-        setTemplateConfig(data.templateConfig);
+      // Load terraform template configuration if it exists
+      if (data.terraformTemplateConfig) {
+        setTerraformConfig(data.terraformTemplateConfig);
       }
-      
-      setError(null);
     } catch (err) {
-      console.error("セッション情報の取得に失敗しました:", err);
-      setError("セッション情報の取得に失敗しました。");
+      console.error("Failed to fetch session:", err);
+      setError(err instanceof Error ? err.message : "セッションの取得に失敗しました。");
     } finally {
       setFetchLoading(false);
     }
   };
 
-  // Load available templates on component mount
-  const loadTemplates = async (clientState: ClientState) => {
-    if (clientState.state !== "loading") {
-      try {
-        const templates = await getCoderTemplates(clientState);
-        setAvailableTemplates(templates);
-      } catch (err) {
-        console.error("Failed to load Coder templates:", err);
-      }
-    }
-  };
-
   useEffect(() => {
     fetchSession(clientState);
-    loadTemplates(clientState);
   }, [clientState, id]);
 
   // タグ追加ハンドラ
@@ -112,51 +95,34 @@ export default function EditSession() {
     setMetadata(newMetadata);
   };
 
-  // Template configuration handlers
-  const handleAddKeyword = () => {
-    if (keywordInput.trim() && !templateConfig.preferredKeywords.includes(keywordInput.trim())) {
-      setTemplateConfig({
-        ...templateConfig,
-        preferredKeywords: [...templateConfig.preferredKeywords, keywordInput.trim()]
-      });
-      setKeywordInput("");
-    }
-  };
-
-  const handleRemoveKeyword = (index: number) => {
-    setTemplateConfig({
-      ...templateConfig,
-      preferredKeywords: templateConfig.preferredKeywords.filter((_, i) => i !== index)
-    });
-  };
-
-  const handleAddParameter = () => {
-    if (paramKey.trim() && paramValue.trim()) {
-      setTemplateConfig({
-        ...templateConfig,
-        parameters: {
-          ...templateConfig.parameters,
-          [paramKey.trim()]: paramValue.trim()
+  // Terraform template configuration handlers
+  const handleAddVariable = () => {
+    if (varKey.trim() && varValue.trim()) {
+      setTerraformConfig({
+        ...terraformConfig,
+        variables: {
+          ...terraformConfig.variables,
+          [varKey.trim()]: varValue.trim()
         }
       });
-      setParamKey("");
-      setParamValue("");
+      setVarKey("");
+      setVarValue("");
     }
   };
 
-  const handleRemoveParameter = (key: string) => {
-    const newParameters = {...templateConfig.parameters};
-    delete newParameters[key];
-    setTemplateConfig({
-      ...templateConfig,
-      parameters: newParameters
+  const handleRemoveVariable = (key: string) => {
+    const newVariables = {...terraformConfig.variables};
+    delete newVariables[key];
+    setTerraformConfig({
+      ...terraformConfig,
+      variables: newVariables
     });
   };
 
   // フォーム送信ハンドラ
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (clientState.state === "loading" || !id) return;
+    if (clientState.state === "loading" || !session || !id) return;
 
     setLoading(true);
     setError(null);
@@ -165,17 +131,13 @@ export default function EditSession() {
 
     // フォームデータからセッションオブジェクトを作成
     const updatedSession = {
+      ...session,
       name: formData.get("name") as string,
       description: formData.get("description") as string || null,
-      status: formData.get("status") as string || "ACTIVE",
+      status: formData.get("status") as string,
       tags: tags,
       metadata: metadata,
-      templateConfig: Object.keys(templateConfig.parameters).length > 0 || 
-                     templateConfig.templateId || 
-                     templateConfig.templateName || 
-                     templateConfig.preferredKeywords.length > 0 ||
-                     templateConfig.repositoryUrl ||
-                     templateConfig.templatePath ? templateConfig : null,
+      terraformTemplateConfig: terraformConfig.enabled ? terraformConfig : null,
     };
 
     try {
@@ -194,11 +156,10 @@ export default function EditSession() {
   if (fetchLoading) {
     return (
       <Layout>
-        <div className="text-center my-5">
-          <div className="spinner-border text-primary" role="status">
+        <div className="d-flex justify-content-center align-items-center" style={{minHeight: "200px"}}>
+          <div className="spinner-border" role="status">
             <span className="visually-hidden">読み込み中...</span>
           </div>
-          <p className="mt-2">セッション情報を読み込んでいます...</p>
         </div>
       </Layout>
     );
@@ -207,9 +168,9 @@ export default function EditSession() {
   if (!session) {
     return (
       <Layout>
-        <p className="text-muted">
-          セッションが見つかりません。
-        </p>
+        <div className="alert alert-danger" role="alert">
+          セッションが見つかりませんでした。
+        </div>
       </Layout>
     );
   }
@@ -221,7 +182,7 @@ export default function EditSession() {
 
         <div className="card">
           <div className="card-header">
-            <h5 className="card-title">セッション情報 (ID: {session.id})</h5>
+            <h5 className="card-title">セッション情報</h5>
           </div>
           <div className="card-body">
 
@@ -358,185 +319,149 @@ export default function EditSession() {
                 </div>
               </div>
 
-              {/* Template Configuration */}
+              {/* Terraform Template Configuration */}
               <div className="mb-3">
-                <label className="form-label">Coderテンプレート設定</label>
+                <label className="form-label">Terraformテンプレート設定</label>
                 <div className="card">
                   <div className="card-body">
-                    <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label htmlFor="templateId" className="form-label">テンプレートID</label>
-                        <select
-                          className="form-select"
-                          id="templateId"
-                          value={templateConfig.templateId || ""}
-                          onChange={(e) => setTemplateConfig({
-                            ...templateConfig,
-                            templateId: e.target.value || undefined
-                          })}
-                        >
-                          <option value="">未指定</option>
-                          {availableTemplates.map((template) => (
-                            <option key={template.id} value={template.id}>
-                              {template.name} ({template.id})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-md-6">
-                        <label htmlFor="templateName" className="form-label">テンプレート名</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="templateName"
-                          placeholder="テンプレート名を指定"
-                          value={templateConfig.templateName || ""}
-                          onChange={(e) => setTemplateConfig({
-                            ...templateConfig,
-                            templateName: e.target.value || undefined
-                          })}
-                        />
-                      </div>
+                    <div className="form-check mb-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="terraformEnabled"
+                        checked={terraformConfig.enabled}
+                        onChange={(e) => setTerraformConfig({
+                          ...terraformConfig,
+                          enabled: e.target.checked
+                        })}
+                      />
+                      <label className="form-check-label" htmlFor="terraformEnabled">
+                        Terraformテンプレートを有効化
+                      </label>
                     </div>
 
-                    <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label htmlFor="repositoryUrl" className="form-label">リポジトリURL</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="repositoryUrl"
-                          placeholder="https://github.com/user/repo"
-                          value={templateConfig.repositoryUrl || ""}
-                          onChange={(e) => setTemplateConfig({
-                            ...templateConfig,
-                            repositoryUrl: e.target.value || undefined
-                          })}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label htmlFor="repositoryRef" className="form-label">リポジトリRef</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="repositoryRef"
-                          placeholder="main"
-                          value={templateConfig.repositoryRef}
-                          onChange={(e) => setTemplateConfig({
-                            ...templateConfig,
-                            repositoryRef: e.target.value
-                          })}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label htmlFor="templatePath" className="form-label">テンプレートパス</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="templatePath"
-                          placeholder="/"
-                          value={templateConfig.templatePath}
-                          onChange={(e) => setTemplateConfig({
-                            ...templateConfig,
-                            templatePath: e.target.value
-                          })}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Preferred Keywords */}
-                    <div className="mb-3">
-                      <label className="form-label">優先キーワード</label>
-                      <div className="input-group mb-2">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="キーワードを入力"
-                          value={keywordInput}
-                          onChange={(e) => setKeywordInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddKeyword();
-                            }
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          onClick={handleAddKeyword}
-                        >
-                          追加
-                        </button>
-                      </div>
-                      <div className="d-flex flex-wrap">
-                        {templateConfig.preferredKeywords.map((keyword, index) => (
-                          <span key={index} className="badge bg-primary me-2 mb-2">
-                            {keyword}
-                            <button
-                              type="button"
-                              className="btn-close btn-close-white ms-2"
-                              aria-label="削除"
-                              onClick={() => handleRemoveKeyword(index)}
-                              style={{fontSize: "0.7em"}}
+                    {terraformConfig.enabled && (
+                      <>
+                        <div className="row mb-3">
+                          <div className="col-md-6">
+                            <label htmlFor="terraformTemplatePath" className="form-label">テンプレートパス</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              id="terraformTemplatePath"
+                              placeholder="/terraform-templates/coder-workspace"
+                              value={terraformConfig.templatePath}
+                              onChange={(e) => setTerraformConfig({
+                                ...terraformConfig,
+                                templatePath: e.target.value
+                              })}
                             />
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Template Parameters */}
-                    <div className="mb-3">
-                      <label className="form-label">テンプレートパラメータ</label>
-                      <div className="row mb-2">
-                        <div className="col-5">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="パラメータ名"
-                            value={paramKey}
-                            onChange={(e) => setParamKey(e.target.value)}
-                          />
-                        </div>
-                        <div className="col-5">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="パラメータ値"
-                            value={paramValue}
-                            onChange={(e) => setParamValue(e.target.value)}
-                          />
-                        </div>
-                        <div className="col-2">
-                          <button
-                            type="button"
-                            className="btn btn-outline-secondary w-100"
-                            onClick={handleAddParameter}
-                          >
-                            追加
-                          </button>
-                        </div>
-                      </div>
-                      <div className="list-group">
-                        {Object.entries(templateConfig.parameters).map(([key, value]) => (
-                          <div key={key} className="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                              <strong>{key}:</strong> {value}
-                            </div>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => handleRemoveParameter(key)}
-                            >
-                              削除
-                            </button>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                          <div className="col-md-3">
+                            <label htmlFor="storageClassName" className="form-label">ストレージクラス</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              id="storageClassName"
+                              placeholder="standard"
+                              value={terraformConfig.storageClassName || ""}
+                              onChange={(e) => setTerraformConfig({
+                                ...terraformConfig,
+                                storageClassName: e.target.value || undefined
+                              })}
+                            />
+                          </div>
+                          <div className="col-md-3">
+                            <label htmlFor="storageSize" className="form-label">ストレージサイズ</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              id="storageSize"
+                              placeholder="10Gi"
+                              value={terraformConfig.storageSize || ""}
+                              onChange={(e) => setTerraformConfig({
+                                ...terraformConfig,
+                                storageSize: e.target.value || undefined
+                              })}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mb-3">
+                          <label htmlFor="mountPath" className="form-label">マウントパス</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            id="mountPath"
+                            placeholder="/home/coder/shared"
+                            value={terraformConfig.mountPath || ""}
+                            onChange={(e) => setTerraformConfig({
+                              ...terraformConfig,
+                              mountPath: e.target.value || undefined
+                            })}
+                          />
+                        </div>
+
+                        {/* Terraform Variables */}
+                        <div className="mb-3">
+                          <label className="form-label">Terraform変数</label>
+                          <div className="row mb-2">
+                            <div className="col-5">
+                              <input
+                                type="text"
+                                className="form-control"
+                                placeholder="変数名"
+                                value={varKey}
+                                onChange={(e) => setVarKey(e.target.value)}
+                              />
+                            </div>
+                            <div className="col-5">
+                              <input
+                                type="text"
+                                className="form-control"
+                                placeholder="変数値"
+                                value={varValue}
+                                onChange={(e) => setVarValue(e.target.value)}
+                              />
+                            </div>
+                            <div className="col-2">
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary w-100"
+                                onClick={handleAddVariable}
+                              >
+                                追加
+                              </button>
+                            </div>
+                          </div>
+                          <div className="list-group">
+                            {Object.entries(terraformConfig.variables).map(([key, value]) => (
+                              <div key={key} className="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                  <strong>{key}:</strong> {value}
+                                </div>
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => handleRemoveVariable(key)}
+                                >
+                                  削除
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {error && (
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              )}
 
               <div className="d-flex justify-content-between">
                 <button

@@ -175,7 +175,7 @@ export default function Sessions() {
                                         <th>名前</th>
                                         <th>説明</th>
                                         <th>ステータス</th>
-                                        <th>テンプレート</th>
+                                        <th>Terraformテンプレート</th>
                                         <th>タグ</th>
                                         <th>作成日時</th>
                                         <th>更新日時</th>
@@ -194,23 +194,20 @@ export default function Sessions() {
                           </span>
                                             </td>
                                             <td>
-                                                {session.templateConfig ? (
+                                                {session.terraformTemplateConfig ? (
                                                     <div className="small">
-                                                        {session.templateConfig.templateId ? (
-                                                            <span className="badge bg-info text-dark me-1">
-                                                                ID: {session.templateConfig.templateId}
-                                                            </span>
-                                                        ) : session.templateConfig.templateName ? (
+                                                        {session.terraformTemplateConfig.enabled ? (
                                                             <span className="badge bg-success text-white me-1">
-                                                                Name: {session.templateConfig.templateName}
-                                                            </span>
-                                                        ) : session.templateConfig.preferredKeywords.length > 0 ? (
-                                                            <span className="badge bg-warning text-dark me-1">
-                                                                Keywords: {session.templateConfig.preferredKeywords.join(", ")}
+                                                                Terraform有効
                                                             </span>
                                                         ) : (
                                                             <span className="badge bg-secondary text-white me-1">
-                                                                Default
+                                                                Terraform無効
+                                                            </span>
+                                                        )}
+                                                        {session.terraformTemplateConfig.storageClassName && (
+                                                            <span className="badge bg-info text-dark me-1">
+                                                                {session.terraformTemplateConfig.storageClassName}
                                                             </span>
                                                         )}
                                                     </div>
