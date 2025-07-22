@@ -121,8 +121,33 @@ export default function TemplateEdit() {
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S / Cmd+S で保存
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        const form = document.querySelector('form') as HTMLFormElement;
+        const saveButton = form.querySelector('button[name="_action"][value="save"]') as HTMLButtonElement;
+        if (saveButton && !saveButton.disabled) {
+          saveButton.click();
+        }
+      }
+      // Ctrl+Enter / Cmd+Enter で構文チェック
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        const form = document.querySelector('form') as HTMLFormElement;
+        const validateButton = form.querySelector('button[name="_action"][value="validate"]') as HTMLButtonElement;
+        if (validateButton && !validateButton.disabled) {
+          validateButton.click();
+        }
+      }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [unsavedChanges]);
 
   return (
@@ -171,26 +196,59 @@ export default function TemplateEdit() {
             <div className="col-md-8">
               <div className="card">
                 <div className="card-header d-flex justify-content-between align-items-center">
-                  <h5 className="card-title mb-0">main.tf</h5>
-                  <div className="btn-group btn-group-sm">
-                    <button
-                      type="submit"
-                      name="_action"
-                      value="validate"
-                      className="btn btn-outline-info"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? '検証中...' : '構文チェック'}
-                    </button>
-                    <button
-                      type="submit"
-                      name="_action"
-                      value="save"
-                      className="btn btn-primary"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? '保存中...' : '保存'}
-                    </button>
+                  <h5 className="card-title mb-0">
+                    main.tf
+                    <small className="text-muted ms-2">
+                      ({content.split('\n').length}行, {content.length}文字)
+                    </small>
+                  </h5>
+                  <div className="d-flex align-items-center gap-2">
+                    <div className="btn-group btn-group-sm">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => {
+                          // フォーマット機能
+                          const formatted = content
+                            .split('\n')
+                            .map(line => line.trim())
+                            .map((line, index, array) => {
+                              // 簡易的なTerraformフォーマット
+                              if (line.endsWith('{')) {
+                                return line;
+                              } else if (line === '}') {
+                                return line;
+                              } else if (line && !line.startsWith('#') && array[index - 1]?.endsWith('{')) {
+                                return '  ' + line;
+                              }
+                              return line;
+                            })
+                            .join('\n');
+                          setContent(formatted);
+                        }}
+                        disabled={isSubmitting}
+                      >
+                        フォーマット
+                      </button>
+                      <button
+                        type="submit"
+                        name="_action"
+                        value="validate"
+                        className="btn btn-outline-info"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? '検証中...' : '構文チェック'}
+                      </button>
+                      <button
+                        type="submit"
+                        name="_action"
+                        value="save"
+                        className="btn btn-primary"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? '保存中...' : '保存'}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="card-body p-0">
@@ -201,11 +259,28 @@ export default function TemplateEdit() {
                     className="form-control border-0"
                     style={{
                       minHeight: "600px",
-                      fontFamily: "monospace",
+                      fontFamily: "'Source Code Pro', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
                       fontSize: "14px",
-                      resize: "vertical"
+                      resize: "vertical",
+                      lineHeight: "1.5",
+                      tabSize: 2
                     }}
                     placeholder="Terraformコードを入力してください..."
+                    onKeyDown={(e) => {
+                      // Tab キーでインデント挿入
+                      if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const start = e.currentTarget.selectionStart;
+                        const end = e.currentTarget.selectionEnd;
+                        const value = e.currentTarget.value;
+                        const newValue = value.substring(0, start) + '  ' + value.substring(end);
+                        setContent(newValue);
+                        // カーソル位置を調整
+                        setTimeout(() => {
+                          e.currentTarget.setSelectionRange(start + 2, start + 2);
+                        });
+                      }
+                    }}
                   />
                 </div>
               </div>
@@ -315,6 +390,147 @@ export default function TemplateEdit() {
                 </div>
               </div>
 
+              <div className="card mb-3">
+                <div className="card-header">
+                  <h6 className="card-title mb-0">テンプレート挿入</h6>
+                </div>
+                <div className="card-body">
+                  <div className="d-grid gap-2">
+                    <button 
+                      type="button"
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => {
+                        const agentTemplate = `
+resource "coder_agent" "main" {
+  arch                   = data.coder_provisioner.me.arch
+  os                     = data.coder_provisioner.me.os
+  startup_script_timeout = 180
+  startup_script         = <<-EOT
+    set -e
+    # Install common tools
+    sudo apt-get update
+    sudo apt-get install -y curl wget git
+  EOT
+
+  metadata {
+    display_name = "CPU Usage"
+    key          = "0_cpu_usage"
+    script       = "coder stat cpu"
+    interval     = 10
+    timeout      = 1
+  }
+}`;
+                        const textarea = document.querySelector('textarea[name="content"]') as HTMLTextAreaElement;
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const newContent = content.substring(0, start) + agentTemplate + content.substring(end);
+                        setContent(newContent);
+                        setTimeout(() => {
+                          textarea.focus();
+                          textarea.setSelectionRange(start + agentTemplate.length, start + agentTemplate.length);
+                        });
+                      }}
+                    >
+                      Coder Agent
+                    </button>
+                    <button 
+                      type="button"
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => {
+                        const k8sTemplate = `
+resource "kubernetes_deployment" "workspace" {
+  metadata {
+    name      = "coder-\${data.coder_workspace.me.owner}-\${data.coder_workspace.me.name}"
+    namespace = data.coder_provisioner.me.tags["namespace"] != "" ? data.coder_provisioner.me.tags["namespace"] : "default"
+  }
+  
+  spec {
+    replicas = data.coder_workspace.me.transition == "start" ? 1 : 0
+    
+    selector {
+      match_labels = {
+        "app.kubernetes.io/name" = "coder-workspace"
+      }
+    }
+    
+    template {
+      metadata {
+        labels = {
+          "app.kubernetes.io/name" = "coder-workspace"
+        }
+      }
+      
+      spec {
+        container {
+          name  = "workspace"
+          image = "ubuntu:20.04"
+          
+          resources {
+            requests = {
+              "cpu"    = "100m"
+              "memory" = "512Mi"
+            }
+            limits = {
+              "cpu"    = "1000m"
+              "memory" = "2Gi"
+            }
+          }
+        }
+      }
+    }
+  }
+}`;
+                        const textarea = document.querySelector('textarea[name="content"]') as HTMLTextAreaElement;
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const newContent = content.substring(0, start) + k8sTemplate + content.substring(end);
+                        setContent(newContent);
+                        setTimeout(() => {
+                          textarea.focus();
+                          textarea.setSelectionRange(start + k8sTemplate.length, start + k8sTemplate.length);
+                        });
+                      }}
+                    >
+                      K8s Deployment
+                    </button>
+                    <button 
+                      type="button"
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => {
+                        const pvcTemplate = `
+resource "kubernetes_persistent_volume_claim" "workspace" {
+  metadata {
+    name      = "coder-\${data.coder_workspace.me.owner}-\${data.coder_workspace.me.name}"
+    namespace = data.coder_provisioner.me.tags["namespace"] != "" ? data.coder_provisioner.me.tags["namespace"] : "default"
+  }
+  
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "10Gi"
+      }
+    }
+    storage_class_name = var.storage_class_name
+  }
+}`;
+                        const textarea = document.querySelector('textarea[name="content"]') as HTMLTextAreaElement;
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const newContent = content.substring(0, start) + pvcTemplate + content.substring(end);
+                        setContent(newContent);
+                        setTimeout(() => {
+                          textarea.focus();
+                          textarea.setSelectionRange(start + pvcTemplate.length, start + pvcTemplate.length);
+                        });
+                      }}
+                    >
+                      PVC
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div className="card">
                 <div className="card-header">
                   <h6 className="card-title mb-0">ヘルプ</h6>
@@ -323,17 +539,33 @@ export default function TemplateEdit() {
                   <div className="small text-muted">
                     <p><strong>Terraformリソース例：</strong></p>
                     <ul>
-                      <li>coder_agent</li>
-                      <li>coder_app</li>
-                      <li>kubernetes_deployment</li>
-                      <li>kubernetes_persistent_volume_claim</li>
+                      <li>coder_agent - ワークスペース内のエージェント</li>
+                      <li>coder_app - Webアプリケーションのポート転送</li>
+                      <li>kubernetes_deployment - Kubernetesデプロイメント</li>
+                      <li>kubernetes_persistent_volume_claim - 永続ボリューム</li>
                     </ul>
+                    
+                    <p className="mt-3"><strong>キーボードショートカット：</strong></p>
+                    <ul>
+                      <li>Ctrl+S / Cmd+S - 保存</li>
+                      <li>Ctrl+Enter / Cmd+Enter - 構文チェック</li>
+                      <li>Tab - インデント挿入</li>
+                    </ul>
+                    
                     <p className="mt-3">
                       <a href="https://registry.coder.com/providers/coder/coder" 
                          target="_blank" 
                          rel="noopener noreferrer"
                          className="text-decoration-none">
                         Coder Provider ドキュメント ↗
+                      </a>
+                    </p>
+                    <p>
+                      <a href="https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs" 
+                         target="_blank" 
+                         rel="noopener noreferrer"
+                         className="text-decoration-none">
+                        Kubernetes Provider ドキュメント ↗
                       </a>
                     </p>
                   </div>
