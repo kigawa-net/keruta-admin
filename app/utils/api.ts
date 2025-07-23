@@ -161,3 +161,12 @@ export async function getTemplateContent(clientState: LoadedClientState, templat
 export async function updateTemplateContent(clientState: LoadedClientState, templatePath: string, content: string): Promise<{success: boolean}> {
     return apiPut<{success: boolean}, {content: string}>(clientState, `templates/content?path=${encodeURIComponent(templatePath)}`, {content});
 }
+
+// Session synchronization API Functions
+export async function syncSessionStatus(clientState: LoadedClientState, sessionId: string): Promise<Session> {
+    return apiPost<Session>(clientState, `sessions/${sessionId}/sync-status`, {});
+}
+
+export async function monitorSessionWorkspaces(clientState: LoadedClientState, sessionId: string): Promise<void> {
+    return apiPost<void>(clientState, `sessions/${sessionId}/monitor-workspaces`, {});
+}

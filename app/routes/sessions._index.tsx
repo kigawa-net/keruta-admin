@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import type {MetaFunction} from "@remix-run/node";
 import Layout from "~/components/Layout";
-import {apiDelete, getSessions} from "~/utils/api";
+import {apiDelete, getSessions, syncSessionStatus, monitorSessionWorkspaces} from "~/utils/api";
 import {ClientState, useClient} from "~/components/Client";
 import {Session} from "~/types";
 
@@ -119,6 +119,57 @@ export default function Sessions() {
         window.location.href = `/sessions/${sessionId}`;
     };
 
+    // セッション同期ハンドラ
+    const handleSyncSession = async (sessionId: string, sessionName: string) => {
+        if (clientState.state === "loading") return;
+
+        try {
+            // まずワークスペースの監視を実行してCoderから最新状態を取得
+            await monitorSessionWorkspaces(clientState, sessionId);
+            // 次にセッションステータスを同期
+            await syncSessionStatus(clientState, sessionId);
+            
+            alert(`セッション「${sessionName}」の同期が完了しました。`);
+            // 同期後、セッション一覧を再取得して画面を更新
+            fetchSessions(clientState);
+        } catch (err) {
+            console.error("セッション同期に失敗しました:", err);
+            alert(`セッション「${sessionName}」の同期に失敗しました。`);
+        }
+    };
+
+    // 全セッション同期ハンドラ
+    const handleSyncAllSessions = async () => {
+        if (clientState.state === "loading") return;
+
+        if (!window.confirm("すべてのセッションをCoderワークスペースと同期しますか？")) {
+            return;
+        }
+
+        try {
+            let successCount = 0;
+            let failedCount = 0;
+
+            for (const session of sessions) {
+                try {
+                    await monitorSessionWorkspaces(clientState, session.id);
+                    await syncSessionStatus(clientState, session.id);
+                    successCount++;
+                } catch (err) {
+                    console.error(`セッション ${session.name} の同期に失敗:`, err);
+                    failedCount++;
+                }
+            }
+
+            alert(`全セッション同期完了: 成功 ${successCount}件, 失敗 ${failedCount}件`);
+            // 同期後、セッション一覧を再取得して画面を更新
+            fetchSessions(clientState);
+        } catch (err) {
+            console.error("全セッション同期に失敗しました:", err);
+            alert("全セッション同期に失敗しました。");
+        }
+    };
+
     return (
         <Layout>
             <div className="sessions">
@@ -127,7 +178,8 @@ export default function Sessions() {
                 <div className="d-flex justify-content-between mb-3">
                     <div>
                         <button className="btn btn-primary me-2" onClick={() => window.location.href = "/sessions/new"}>新規セッション作成</button>
-                        <button className="btn btn-outline-secondary" onClick={handleRefresh}>更新</button>
+                        <button className="btn btn-outline-secondary me-2" onClick={handleRefresh}>更新</button>
+                        <button className="btn btn-outline-warning" onClick={handleSyncAllSessions}>全同期</button>
                     </div>
                     <div className="d-flex">
                         <input
@@ -240,6 +292,13 @@ export default function Sessions() {
                                                     onClick={() => handleEdit(session.id)}
                                                 >
                                                     編集
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-outline-warning me-1"
+                                                    onClick={() => handleSyncSession(session.id, session.name)}
+                                                    title="Coderワークスペースとの状態を同期"
+                                                >
+                                                    同期
                                                 </button>
                                                 {session.terraformTemplateConfig?.enabled && session.terraformTemplateConfig?.templatePath && (
                                                     <button
