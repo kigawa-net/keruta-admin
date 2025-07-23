@@ -178,13 +178,16 @@ export default function EditSession() {
 
     // フォームデータからセッションオブジェクトを作成
     const updatedSession = {
-      ...session,
       name: formData.get("name") as string,
-      description: formData.get("description") as string || null,
+      description: (formData.get("description") as string) || undefined,
       status: formData.get("status") as string,
       tags: tags,
       metadata: metadata,
-      terraformTemplateConfig: terraformConfig.enabled ? terraformConfig : null,
+      templateConfig: terraformConfig.enabled ? {
+        templatePath: terraformConfig.templatePath,
+        preferredKeywords: [],
+        parameters: terraformConfig.variables
+      } : undefined,
     };
 
     try {

@@ -33,7 +33,7 @@ export const loader: LoaderFunction = async ({ params }) => {
 };
 
 export const meta: MetaFunction = ({ data }) => {
-  const document = data?.document as Document | null;
+  const document = (data as { document: Document | null })?.document;
   return [
     { title: document ? `keruta管理パネル - ${document.title}` : "keruta管理パネル - ドキュメント詳細" },
     { name: "description", content: "ドキュメントの詳細表示" },

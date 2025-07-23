@@ -81,7 +81,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 };
 
 export const meta: MetaFunction = ({ data }) => {
-  const document = data?.document as Document | null;
+  const document = (data as { document: Document | null })?.document;
   return [
     { title: document ? `keruta管理パネル - ${document.title}の編集` : "keruta管理パネル - ドキュメント編集" },
     { name: "description", content: "ドキュメントの編集" },

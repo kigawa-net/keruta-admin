@@ -102,11 +102,11 @@ export default function NewSession() {
     // フォームデータからセッションオブジェクトを作成
     const session = {
       name: formData.get("name") as string,
-      description: formData.get("description") as string || null,
+      description: (formData.get("description") as string) || undefined,
       status: formData.get("status") as string || "ACTIVE",
       tags: tags,
       metadata: metadata,
-      terraformTemplateConfig: terraformConfig.enabled ? terraformConfig : null,
+      terraformTemplateConfig: terraformConfig.enabled ? terraformConfig : undefined,
     };
 
     try {

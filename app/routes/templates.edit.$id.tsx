@@ -180,7 +180,7 @@ export default function TemplateEdit() {
         {actionData && (
           <div className={`alert ${actionData.success ? 'alert-success' : 'alert-danger'} alert-dismissible fade show`}>
             {actionData.message}
-            {actionData.errors && (
+            {'errors' in actionData && actionData.errors && (
               <ul className="mb-0 mt-2">
                 {actionData.errors.map((error: string, index: number) => (
                   <li key={index}>{error}</li>
@@ -211,8 +211,8 @@ export default function TemplateEdit() {
                           // フォーマット機能
                           const formatted = content
                             .split('\n')
-                            .map(line => line.trim())
-                            .map((line, index, array) => {
+                            .map((line: string) => line.trim())
+                            .map((line: string, index: number, array: string[]) => {
                               // 簡易的なTerraformフォーマット
                               if (line.endsWith('{')) {
                                 return line;

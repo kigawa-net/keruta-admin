@@ -219,7 +219,7 @@ export default function Tasks() {
                                             <td>
                                                 {sessions[task.session] ? (
                                                     <span className="badge bg-info text-dark">
-                                                        {sessions[task.session].name}
+                                                        {sessions[task.session]?.name}
                                                     </span>
                                                 ) : (
                                                     <span className="text-muted">不明</span>
