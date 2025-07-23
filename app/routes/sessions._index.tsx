@@ -250,13 +250,12 @@ export default function Sessions() {
                                             <td>
                                                 {session.terraformTemplateConfig ? (
                                                     <div className="small">
-                                                        {session.terraformTemplateConfig.enabled ? (
-                                                            <span className="badge bg-success text-white me-1">
-                                                                Terraform有効
-                                                            </span>
-                                                        ) : (
-                                                            <span className="badge bg-secondary text-white me-1">
-                                                                Terraform無効
+                                                        <span className="badge bg-success text-white me-1">
+                                                            Terraform有効
+                                                        </span>
+                                                        {session.terraformTemplateConfig.claudeCodeConfig?.enabled && (
+                                                            <span className="badge bg-primary text-white me-1">
+                                                                Claude Code
                                                             </span>
                                                         )}
                                                         {session.terraformTemplateConfig.storageClassName && (
@@ -266,7 +265,14 @@ export default function Sessions() {
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <span className="text-muted">なし</span>
+                                                    <div className="small">
+                                                        <span className="badge bg-success text-white me-1">
+                                                            Terraform有効
+                                                        </span>
+                                                        <span className="badge bg-primary text-white me-1">
+                                                            Claude Code
+                                                        </span>
+                                                    </div>
                                                 )}
                                             </td>
                                             <td>
@@ -302,7 +308,7 @@ export default function Sessions() {
                                                 >
                                                     同期
                                                 </button>
-                                                {session.terraformTemplateConfig?.enabled && session.terraformTemplateConfig?.templatePath && (
+                                                {session.terraformTemplateConfig?.templatePath && (
                                                     <button
                                                         className="btn btn-sm btn-outline-info me-1"
                                                         onClick={() => window.location.href = `/sessions/edit/${session.id}#template-editor`}

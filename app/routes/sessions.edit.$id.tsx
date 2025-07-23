@@ -34,7 +34,7 @@ export default function EditSession() {
     storageSize: "10Gi",
     mountPath: "/home/coder/shared",
     variables: {},
-    enabled: false,
+    enabled: true, // 常に有効
     claudeCodeConfig: {
       enabled: true,
       apiKey: "",
@@ -379,23 +379,15 @@ export default function EditSession() {
                 <label className="form-label">Terraformテンプレート設定</label>
                 <div className="card">
                   <div className="card-body">
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="terraformEnabled"
-                        checked={terraformConfig.enabled}
-                        onChange={(e) => setTerraformConfig({
-                          ...terraformConfig,
-                          enabled: e.target.checked
-                        })}
-                      />
-                      <label className="form-check-label" htmlFor="terraformEnabled">
-                        Terraformテンプレートを有効化
-                      </label>
+                    <div className="alert alert-info mb-3">
+                      <div className="d-flex align-items-center">
+                        <i className="bi bi-info-circle me-2"></i>
+                        <span><strong>Terraformテンプレート:</strong> すべてのセッションで自動的に有効化されます</span>
+                      </div>
                     </div>
 
-                    {terraformConfig.enabled && (
+                    {/* Terraformテンプレートは常に有効 */}
+                    {(
                       <>
                         <div className="row mb-3">
                           <div className="col-md-6">
@@ -602,7 +594,7 @@ export default function EditSession() {
               </div>
 
               {/* Template Editor Section */}
-              {terraformConfig.enabled && terraformConfig.templatePath && (
+              {terraformConfig.templatePath && (
                 <div className="mb-3">
                   <label className="form-label">main.tf編集</label>
                   <div className="card">
