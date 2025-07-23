@@ -10,6 +10,13 @@ export interface TerraformTemplateConfig {
   mountPath?: string;
   variables: Record<string, string>;
   enabled: boolean;
+  claudeCodeConfig?: ClaudeCodeConfig;
+}
+
+export interface ClaudeCodeConfig {
+  enabled: boolean;
+  apiKey?: string;
+  nodeVersion?: string;
 }
 
 export interface Session {

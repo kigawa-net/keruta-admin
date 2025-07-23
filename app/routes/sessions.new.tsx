@@ -31,7 +31,12 @@ export default function NewSession() {
     storageSize: "10Gi",
     mountPath: "/home/coder/shared",
     variables: {},
-    enabled: false
+    enabled: false,
+    claudeCodeConfig: {
+      enabled: true,
+      apiKey: "",
+      nodeVersion: "20"
+    }
   });
   const [varKey, setVarKey] = useState("");
   const [varValue, setVarValue] = useState("");
@@ -395,6 +400,95 @@ export default function NewSession() {
                               </div>
                             ))}
                           </div>
+                        </div>
+
+                        {/* Claude Code設定 */}
+                        <div className="mb-4">
+                          <h6 className="text-muted mb-3">🤖 Claude Code設定</h6>
+                          <div className="form-check mb-3">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="claudeCodeEnabled"
+                              checked={terraformConfig.claudeCodeConfig?.enabled || false}
+                              onChange={(e) => setTerraformConfig({
+                                ...terraformConfig,
+                                claudeCodeConfig: {
+                                  ...terraformConfig.claudeCodeConfig,
+                                  enabled: e.target.checked,
+                                  apiKey: terraformConfig.claudeCodeConfig?.apiKey || "",
+                                  nodeVersion: terraformConfig.claudeCodeConfig?.nodeVersion || "20"
+                                }
+                              })}
+                            />
+                            <label className="form-check-label" htmlFor="claudeCodeEnabled">
+                              Claude Codeを有効化（ワークスペースにClaude CLI toolを自動インストール）
+                            </label>
+                          </div>
+
+                          {terraformConfig.claudeCodeConfig?.enabled && (
+                            <>
+                              <div className="row mb-3">
+                                <div className="col-md-8">
+                                  <label htmlFor="claudeApiKey" className="form-label">
+                                    Anthropic API Key
+                                    <small className="text-muted ms-2">（オプション - 後でユーザーが設定可能）</small>
+                                  </label>
+                                  <input
+                                    type="password"
+                                    className="form-control"
+                                    id="claudeApiKey"
+                                    placeholder="sk-ant-api03-..."
+                                    value={terraformConfig.claudeCodeConfig?.apiKey || ""}
+                                    onChange={(e) => setTerraformConfig({
+                                      ...terraformConfig,
+                                      claudeCodeConfig: {
+                                        ...terraformConfig.claudeCodeConfig!,
+                                        apiKey: e.target.value
+                                      }
+                                    })}
+                                  />
+                                  <div className="form-text">
+                                    空の場合、ユーザーは `claude-code auth` コマンドで後から設定できます
+                                  </div>
+                                </div>
+                                <div className="col-md-4">
+                                  <label htmlFor="nodeVersion" className="form-label">Node.js Version</label>
+                                  <select
+                                    className="form-select"
+                                    id="nodeVersion"
+                                    value={terraformConfig.claudeCodeConfig?.nodeVersion || "20"}
+                                    onChange={(e) => setTerraformConfig({
+                                      ...terraformConfig,
+                                      claudeCodeConfig: {
+                                        ...terraformConfig.claudeCodeConfig!,
+                                        nodeVersion: e.target.value
+                                      }
+                                    })}
+                                  >
+                                    <option value="18">Node.js 18</option>
+                                    <option value="20">Node.js 20</option>
+                                    <option value="22">Node.js 22</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="alert alert-info">
+                                <div className="d-flex align-items-start">
+                                  <i className="bi bi-info-circle me-2 mt-1"></i>
+                                  <div>
+                                    <strong>Claude Code機能:</strong>
+                                    <ul className="mb-0 mt-1">
+                                      <li>ターミナルでのClaude AI統合</li>
+                                      <li>コードベース全体の理解とナビゲーション</li>
+                                      <li>VS Code, JetBrains IDEとの統合</li>
+                                      <li>コマンドライン: <code>claude-code</code> または <code>cc</code></li>
+                                    </ul>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </>
                     )}
