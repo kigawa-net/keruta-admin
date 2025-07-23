@@ -134,7 +134,8 @@ export default function Sessions() {
             fetchSessions(clientState);
         } catch (err) {
             console.error("セッション同期に失敗しました:", err);
-            alert(`セッション「${sessionName}」の同期に失敗しました。`);
+            const errorMessage = err instanceof Error ? err.message : "不明なエラー";
+            alert(`セッション「${sessionName}」の同期に失敗しました。\nエラー: ${errorMessage}`);
         }
     };
 
@@ -166,7 +167,8 @@ export default function Sessions() {
             fetchSessions(clientState);
         } catch (err) {
             console.error("全セッション同期に失敗しました:", err);
-            alert("全セッション同期に失敗しました。");
+            const errorMessage = err instanceof Error ? err.message : "不明なエラー";
+            alert(`全セッション同期に失敗しました。\nエラー: ${errorMessage}`);
         }
     };
 

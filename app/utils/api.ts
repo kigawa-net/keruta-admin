@@ -65,7 +65,16 @@ export async function apiPost<T, D = Record<string, unknown>>(clientState: Loade
         throw new ApiError(`API request failed: ${response.statusText}`, response.status);
     }
 
-    return response.json();
+    // Check if response has content before trying to parse JSON
+    const contentType = response.headers.get('content-type');
+    const text = await response.text();
+    
+    if (text && contentType && contentType.includes('application/json')) {
+        return JSON.parse(text);
+    }
+
+    // Return undefined for empty responses (void endpoints)
+    return undefined as T;
 }
 
 /**
@@ -90,7 +99,16 @@ export async function apiPut<T, D = Record<string, unknown>>(clientState: Loaded
         throw new ApiError(`API request failed: ${response.statusText}`, response.status);
     }
 
-    return response.json();
+    // Check if response has content before trying to parse JSON
+    const contentType = response.headers.get('content-type');
+    const text = await response.text();
+    
+    if (text && contentType && contentType.includes('application/json')) {
+        return JSON.parse(text);
+    }
+
+    // Return undefined for empty responses (void endpoints)
+    return undefined as T;
 }
 
 /**
