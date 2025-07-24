@@ -111,7 +111,23 @@ export default function NewSession() {
       status: formData.get("status") as string || "ACTIVE",
       tags: tags,
       metadata: metadata,
-      terraformTemplateConfig: terraformConfig.enabled ? terraformConfig : undefined,
+      templateConfig: terraformConfig.enabled ? {
+        templateId: null,
+        templateName: null,
+        repositoryUrl: null,
+        repositoryRef: "main",
+        templatePath: terraformConfig.templatePath,
+        preferredKeywords: [],
+        parameters: {
+          storage_class_name: terraformConfig.storageClassName || "standard",
+          storage_size: terraformConfig.storageSize || "10Gi",
+          mount_path: terraformConfig.mountPath || "/home/coder/shared",
+          claude_code_enabled: terraformConfig.claudeCodeConfig?.enabled ? "true" : "false",
+          claude_api_key: terraformConfig.claudeCodeConfig?.apiKey || "",
+          node_version: terraformConfig.claudeCodeConfig?.nodeVersion || "20",
+          ...terraformConfig.variables
+        }
+      } : undefined,
     };
 
     try {
