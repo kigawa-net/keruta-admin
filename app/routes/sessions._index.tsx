@@ -98,13 +98,15 @@ export default function Sessions() {
     const handleDelete = async (sessionId: string, sessionName: string) => {
         if (clientState.state === "loading") return;
 
-        if (window.confirm(`セッション「${sessionName}」を削除してもよろしいですか？`)) {
+        if (window.confirm(`セッション「${sessionName}」を削除してもよろしいですか？\n\n関連するワークスペースも同時に削除されます。\nこの操作は取り消せません。`)) {
             try {
                 await apiDelete(clientState, `sessions/${sessionId}`);
                 // 削除成功後、セッション一覧を再取得
                 fetchSessions(clientState);
             } catch (err) {
                 console.error("セッションの削除に失敗しました:", err);
+                const errorMessage = err instanceof Error ? err.message : "不明なエラー";
+                alert(`セッション「${sessionName}」の削除に失敗しました。\nエラー: ${errorMessage}`);
             }
         }
     };
