@@ -7,7 +7,7 @@
 
 import {LoadedClientState} from "~/components/Client";
 import {createFetchOptions} from "~/utils/apiConfig";
-import {CoderTemplate, Session, SessionFormData} from "~/types";
+import {CoderTemplate, Session, SessionFormData, Template} from "~/types";
 
 /**
  * Generic API error class
@@ -178,6 +178,15 @@ export async function getTemplateContent(clientState: LoadedClientState, templat
 
 export async function updateTemplateContent(clientState: LoadedClientState, templatePath: string, content: string): Promise<{success: boolean}> {
     return apiPut<{success: boolean}, {content: string}>(clientState, `templates/content?path=${encodeURIComponent(templatePath)}`, {content});
+}
+
+// Templates API Functions
+export async function getTemplates(clientState: LoadedClientState): Promise<Template[]> {
+    return apiGet<Template[]>(clientState, "templates");
+}
+
+export async function getTemplate(clientState: LoadedClientState, templateId: string): Promise<Template> {
+    return apiGet<Template>(clientState, `templates/${templateId}`);
 }
 
 // Session synchronization API Functions
