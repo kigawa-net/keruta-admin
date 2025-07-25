@@ -77,6 +77,17 @@ export interface ApiResponse<T> {
   success: boolean;
 }
 
+// Template Types
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  path: string;
+  content: string;
+  lastModified: string;
+  status: "active" | "draft" | "error";
+}
+
 // Form Types
 export interface SessionFormData {
   name: string;
@@ -84,5 +95,15 @@ export interface SessionFormData {
   status: string;
   tags: string[];
   metadata: Record<string, string>;
-  terraformTemplateConfig?: TerraformTemplateConfig;
+  templateConfig?: SessionTemplateConfig;
+}
+
+export interface SessionTemplateConfig {
+  templateId: string | null;
+  templateName: string | null;
+  repositoryUrl: string | null;
+  repositoryRef: string;
+  templatePath: string;
+  preferredKeywords: string[];
+  parameters: Record<string, string>;
 }
