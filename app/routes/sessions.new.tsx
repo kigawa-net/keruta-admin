@@ -52,7 +52,7 @@ export default function NewSession() {
   // Load templates on component mount
   useEffect(() => {
     const loadTemplates = async () => {
-      if (clientState.state !== "authorized") return;
+      if (clientState.state == "loading") return;
 
       try {
         setTemplateLoading(true);
