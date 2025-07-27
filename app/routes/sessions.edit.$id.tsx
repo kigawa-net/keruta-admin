@@ -189,6 +189,10 @@ export default function EditSession() {
       tags: tags,
       metadata: metadata,
       templateConfig: terraformConfig.enabled ? {
+        templateId: null,
+        templateName: null,
+        repositoryUrl: null,
+        repositoryRef: "main",
         templatePath: terraformConfig.templatePath,
         preferredKeywords: [],
         parameters: terraformConfig.variables

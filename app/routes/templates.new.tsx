@@ -191,7 +191,7 @@ resource "coder_agent" "main" {
   const isSubmitting = navigation.state === "submitting";
 
   useEffect(() => {
-    const hasContent = name.trim() || description.trim() || content.trim();
+    const hasContent = Boolean(name.trim() || description.trim() || content.trim());
     setUnsavedChanges(hasContent);
   }, [name, description, content]);
 
