@@ -24,12 +24,12 @@ export default function NewSession() {
   const [error, setError] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [metadata, setMetadata] = useState<Record<string, string>>({});
-  
+
   // Template state
   const [templates, setTemplates] = useState<CoderTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [templateLoading, setTemplateLoading] = useState(false);
-  
+
   // Session template configuration state
   const [templateConfig, setTemplateConfig] = useState<SessionTemplateConfig>({
     templateId: null,
@@ -53,12 +53,13 @@ export default function NewSession() {
   useEffect(() => {
     const loadTemplates = async () => {
       if (clientState.state !== "authorized") return;
-      
+
       try {
         setTemplateLoading(true);
         const templatesData = await getCoderTemplates(clientState);
+        console.log("Templates:", templatesData);
         setTemplates(templatesData);
-        
+
         // Set default template if available
         const defaultTemplate = templatesData.find(t => !(t as any).deprecated);
         if (defaultTemplate) {
@@ -76,7 +77,7 @@ export default function NewSession() {
         setTemplateLoading(false);
       }
     };
-    
+
     loadTemplates();
   }, [clientState]);
 
@@ -84,7 +85,7 @@ export default function NewSession() {
   const handleTemplateSelect = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     setSelectedTemplateId(templateId);
-    
+
     if (template) {
       setTemplateConfig(prev => ({
         ...prev,
