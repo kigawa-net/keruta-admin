@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { Form, useNavigate } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { createSession, getTemplates } from "~/utils/api";
+import { createSession, getCoderTemplates } from "~/utils/api";
 import { useClient } from "~/components/Client";
-import { Template, SessionTemplateConfig } from "~/types";
+import { CoderTemplate, SessionTemplateConfig } from "~/types";
 
 export const meta: MetaFunction = () => {
   return [
@@ -25,7 +25,7 @@ export default function NewSession() {
   const [metadataValue, setMetadataValue] = useState("");
   
   // Template state
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [templates, setTemplates] = useState<CoderTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [templateLoading, setTemplateLoading] = useState(false);
   
@@ -85,18 +85,18 @@ export default function NewSession() {
       
       try {
         setTemplateLoading(true);
-        const templatesData = await getTemplates(clientState);
+        const templatesData = await getCoderTemplates(clientState);
         setTemplates(templatesData);
         
         // Set default template if available
-        const defaultTemplate = templatesData.find(t => t.status === "active");
+        const defaultTemplate = templatesData.find(t => !t.deprecated);
         if (defaultTemplate) {
           setSelectedTemplateId(defaultTemplate.id);
           setTemplateConfig(prev => ({
             ...prev,
             templateId: defaultTemplate.id,
-            templateName: defaultTemplate.name,
-            templatePath: defaultTemplate.path
+            templateName: defaultTemplate.displayName,
+            templatePath: `/templates/${defaultTemplate.name}`
           }));
         }
       } catch (error) {
@@ -118,8 +118,8 @@ export default function NewSession() {
       setTemplateConfig(prev => ({
         ...prev,
         templateId: template.id,
-        templateName: template.name,
-        templatePath: template.path
+        templateName: template.displayName,
+        templatePath: `/templates/${template.name}`
       }));
     }
   };
@@ -351,7 +351,7 @@ export default function NewSession() {
                             <option value="">テンプレートを選択してください</option>
                             {templates.map((template) => (
                               <option key={template.id} value={template.id}>
-                                {template.name} - {template.description}
+                                {template.displayName} - {template.description}
                               </option>
                             ))}
                           </select>
@@ -369,7 +369,7 @@ export default function NewSession() {
                                 <i className="bi bi-info-circle me-2"></i>
                                 <div>
                                   <strong>選択されたテンプレート:</strong> {templateConfig.templateName}<br/>
-                                  <small className="text-muted">パス: {templateConfig.templatePath}</small>
+                                  <small className="text-muted">ID: {templateConfig.templateId}</small>
                                 </div>
                               </div>
                             </div>
