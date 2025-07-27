@@ -7,7 +7,7 @@
 
 import {LoadedClientState} from "~/components/Client";
 import {createFetchOptions} from "~/utils/apiConfig";
-import {CoderTemplate, Session, SessionFormData, Template} from "~/types";
+import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, WorkspaceTemplate} from "~/types";
 
 /**
  * Generic API error class
@@ -196,4 +196,38 @@ export async function syncSessionStatus(clientState: LoadedClientState, sessionI
 
 export async function monitorSessionWorkspaces(clientState: LoadedClientState, sessionId: string): Promise<void> {
     return apiPost<void>(clientState, `sessions/${sessionId}/monitor-workspaces`, {});
+}
+
+// Workspace API Functions
+export async function getWorkspaces(clientState: LoadedClientState, sessionId?: string): Promise<Workspace[]> {
+    const endpoint = sessionId ? `workspaces?sessionId=${sessionId}` : "workspaces";
+    return apiGet<Workspace[]>(clientState, endpoint);
+}
+
+export async function getWorkspace(clientState: LoadedClientState, workspaceId: string): Promise<Workspace> {
+    return apiGet<Workspace>(clientState, `workspaces/${workspaceId}`);
+}
+
+export async function createWorkspace(clientState: LoadedClientState, workspace: CreateWorkspaceData): Promise<Workspace> {
+    return apiPost<Workspace, CreateWorkspaceData>(clientState, "workspaces", workspace);
+}
+
+export async function updateWorkspaceStatus(clientState: LoadedClientState, workspaceId: string, status: string): Promise<Workspace> {
+    return apiPut<Workspace, {status: string}>(clientState, `workspaces/${workspaceId}/status`, {status});
+}
+
+export async function startWorkspace(clientState: LoadedClientState, workspaceId: string): Promise<Workspace> {
+    return apiPost<Workspace>(clientState, `workspaces/${workspaceId}/start`, {});
+}
+
+export async function stopWorkspace(clientState: LoadedClientState, workspaceId: string): Promise<Workspace> {
+    return apiPost<Workspace>(clientState, `workspaces/${workspaceId}/stop`, {});
+}
+
+export async function deleteWorkspace(clientState: LoadedClientState, workspaceId: string): Promise<void> {
+    return apiDelete<void>(clientState, `workspaces/${workspaceId}`);
+}
+
+export async function getWorkspaceTemplates(clientState: LoadedClientState): Promise<WorkspaceTemplate[]> {
+    return apiGet<WorkspaceTemplate[]>(clientState, "workspaces/templates");
 }

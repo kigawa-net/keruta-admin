@@ -47,6 +47,11 @@ export default function Layout({ children }: LayoutProps) {
                 </Link>
               </li>
               <li className="nav-item">
+                <Link to="/workspaces" className="nav-link">
+                  ワークスペース
+                </Link>
+              </li>
+              <li className="nav-item">
                 <Link to="/templates" className="nav-link">
                   テンプレート管理
                 </Link>

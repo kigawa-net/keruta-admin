@@ -107,3 +107,39 @@ export interface SessionTemplateConfig {
   preferredKeywords: string[];
   parameters: Record<string, string>;
 }
+
+// Workspace Form Types
+export interface CreateWorkspaceData {
+  name: string;
+  sessionId: string;
+  templateId?: string;
+  templateVersionId?: string;
+  autoStartSchedule?: string;
+  ttlMs?: number;
+  automaticUpdates?: boolean;
+  richParameterValues?: Record<string, string>;
+}
+
+export interface WorkspaceTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  version: string;
+  icon?: string;
+  isDefault: boolean;
+  parameters: WorkspaceTemplateParameter[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkspaceTemplateParameter {
+  name: string;
+  displayName: string;
+  description?: string;
+  type: string;
+  required: boolean;
+  defaultValue?: string;
+  options: string[];
+  validationRegex?: string;
+  mutable: boolean;
+}
