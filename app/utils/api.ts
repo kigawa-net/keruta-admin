@@ -228,6 +228,10 @@ export async function deleteWorkspace(clientState: LoadedClientState, workspaceI
     return apiDelete<void>(clientState, `workspaces/${workspaceId}`);
 }
 
+export async function getWorkspaceBySessionId(clientState: LoadedClientState, sessionId: string): Promise<Workspace> {
+    return apiGet<Workspace>(clientState, `workspaces/session/${sessionId}`);
+}
+
 export async function getWorkspaceTemplates(clientState: LoadedClientState): Promise<WorkspaceTemplate[]> {
     return apiGet<WorkspaceTemplate[]>(clientState, "workspaces/templates");
 }
