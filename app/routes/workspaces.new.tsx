@@ -86,11 +86,16 @@ export default function NewWorkspace() {
       return;
     }
 
+    // Get current user info (fallback to default for now)
+    // TODO: Implement proper user authentication and user info retrieval
+    const currentUserId = "system-user";
+    const currentUserName = "System User";
+
     const workspaceData: CreateWorkspaceData = {
       name: name.trim(),
       templateId: selectedTemplateId,
-      ownerId: "default-user", // TODO: 実際のユーザーIDを取得
-      ownerName: "Default User", // TODO: 実際のユーザー名を取得  
+      ownerId: currentUserId,
+      ownerName: currentUserName,
       sessionId: selectedSessionId,
       ttlMs: ttlMs,
       autoStart: automaticUpdates,
