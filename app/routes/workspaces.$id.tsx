@@ -32,9 +32,11 @@ export default function WorkspaceDetail() {
         const workspaceData = await getWorkspace(clientState, id);
         setWorkspace(workspaceData);
 
-        // Load associated session
-        const sessionData = await getSession(clientState, workspaceData.sessionId);
-        setSession(sessionData);
+        // Load associated session if sessionId exists
+        if (workspaceData.sessionId) {
+          const sessionData = await getSession(clientState, workspaceData.sessionId);
+          setSession(sessionData);
+        }
       } catch (err) {
         console.error("Failed to load workspace:", err);
         setError(err instanceof Error ? err.message : "ワークスペースの読み込みに失敗しました。");
@@ -316,82 +318,63 @@ export default function WorkspaceDetail() {
                     {new Date(workspace.updatedAt).toLocaleString("ja-JP")}
                   </div>
                 </div>
-                {workspace.lastUsedAt && (
-                  <div className="row mb-3">
-                    <div className="col-sm-3">
-                      <strong>最終使用:</strong>
-                    </div>
-                    <div className="col-sm-9">
-                      {new Date(workspace.lastUsedAt).toLocaleString("ja-JP")}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
-            {workspace.resourceInfo && (
-              <div className="card mb-4">
-                <div className="card-header">
-                  <h5 className="card-title mb-0">リソース情報</h5>
+            {/* New workspace fields */}
+            <div className="card mb-4">
+              <div className="card-header">
+                <h5 className="card-title mb-0">Coder情報</h5>
+              </div>
+              <div className="card-body">
+                <div className="row mb-3">
+                  <div className="col-sm-3">
+                    <strong>Workspace ID:</strong>
+                  </div>
+                  <div className="col-sm-9">
+                    <code>{workspace.id}</code>
+                  </div>
                 </div>
-                <div className="card-body">
-                  <div className="row mb-3">
-                    <div className="col-sm-3">
-                      <strong>Namespace:</strong>
-                    </div>
-                    <div className="col-sm-9">
-                      <code>{workspace.resourceInfo.kubernetesNamespace}</code>
-                    </div>
+                <div className="row mb-3">
+                  <div className="col-sm-3">
+                    <strong>Access URL:</strong>
                   </div>
-                  <div className="row mb-3">
-                    <div className="col-sm-3">
-                      <strong>PVC:</strong>
-                    </div>
-                    <div className="col-sm-9">
-                      <code>{workspace.resourceInfo.persistentVolumeClaimName}</code>
-                    </div>
+                  <div className="col-sm-9">
+                    {workspace.accessUrl ? (
+                      <a 
+                        href={workspace.accessUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-decoration-none"
+                      >
+                        {workspace.accessUrl}
+                        <i className="bi bi-box-arrow-up-right ms-1"></i>
+                      </a>
+                    ) : (
+                      <span className="text-muted">未設定</span>
+                    )}
                   </div>
-                  {workspace.resourceInfo.podName && (
-                    <div className="row mb-3">
-                      <div className="col-sm-3">
-                        <strong>Pod:</strong>
-                      </div>
-                      <div className="col-sm-9">
-                        <code>{workspace.resourceInfo.podName}</code>
-                      </div>
-                    </div>
-                  )}
-                  {workspace.resourceInfo.serviceName && (
-                    <div className="row mb-3">
-                      <div className="col-sm-3">
-                        <strong>Service:</strong>
-                      </div>
-                      <div className="col-sm-9">
-                        <code>{workspace.resourceInfo.serviceName}</code>
-                      </div>
-                    </div>
-                  )}
-                  {workspace.resourceInfo.ingressUrl && (
-                    <div className="row mb-3">
-                      <div className="col-sm-3">
-                        <strong>URL:</strong>
-                      </div>
-                      <div className="col-sm-9">
-                        <a 
-                          href={workspace.resourceInfo.ingressUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-decoration-none"
-                        >
-                          {workspace.resourceInfo.ingressUrl}
-                          <i className="bi bi-box-arrow-up-right ms-1"></i>
-                        </a>
-                      </div>
-                    </div>
-                  )}
+                </div>
+                <div className="row mb-3">
+                  <div className="col-sm-3">
+                    <strong>自動開始:</strong>
+                  </div>
+                  <div className="col-sm-9">
+                    <span className={`badge ${workspace.autoStart ? 'bg-success' : 'bg-secondary'}`}>
+                      {workspace.autoStart ? '有効' : '無効'}
+                    </span>
+                  </div>
+                </div>
+                <div className="row mb-3">
+                  <div className="col-sm-3">
+                    <strong>TTL:</strong>
+                  </div>
+                  <div className="col-sm-9">
+                    {Math.round(workspace.ttlMs / 1000 / 60)} 分
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="col-md-4">

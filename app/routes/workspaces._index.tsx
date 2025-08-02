@@ -220,12 +220,16 @@ export default function WorkspacesIndex() {
                             </Link>
                           </td>
                           <td>
-                            <Link
-                              to={`/sessions/${workspace.sessionId}`}
-                              className="text-decoration-none text-muted"
-                            >
-                              {workspace.sessionId.substring(0, 8)}...
-                            </Link>
+                            {workspace.sessionId ? (
+                              <Link
+                                to={`/sessions/${workspace.sessionId}`}
+                                className="text-decoration-none text-muted"
+                              >
+                                {workspace.sessionId.substring(0, 8)}...
+                              </Link>
+                            ) : (
+                              <span className="text-muted">未設定</span>
+                            )}
                           </td>
                           <td>
                             <span className={`badge ${getStatusBadgeClass(workspace.status)}`}>

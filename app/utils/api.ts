@@ -7,7 +7,7 @@
 
 import {LoadedClientState} from "~/components/Client";
 import {createFetchOptions} from "~/utils/apiConfig";
-import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, WorkspaceTemplate} from "~/types";
+import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, UpdateWorkspaceData, WorkspaceTemplate} from "~/types";
 
 /**
  * Generic API error class
@@ -210,6 +210,10 @@ export async function getWorkspace(clientState: LoadedClientState, workspaceId: 
 
 export async function createWorkspace(clientState: LoadedClientState, workspace: CreateWorkspaceData): Promise<Workspace> {
     return apiPost<Workspace, CreateWorkspaceData>(clientState, "workspaces", workspace);
+}
+
+export async function updateWorkspace(clientState: LoadedClientState, workspaceId: string, workspace: UpdateWorkspaceData): Promise<Workspace> {
+    return apiPut<Workspace, UpdateWorkspaceData>(clientState, `workspaces/${workspaceId}`, workspace);
 }
 
 export async function updateWorkspaceStatus(clientState: LoadedClientState, workspaceId: string, status: string): Promise<Workspace> {

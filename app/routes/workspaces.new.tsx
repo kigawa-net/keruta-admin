@@ -74,14 +74,26 @@ export default function NewWorkspace() {
     setLoading(true);
     setError(null);
 
+    if (!selectedSessionId) {
+      setError("セッションを選択してください");
+      setLoading(false);
+      return;
+    }
+    
+    if (!selectedTemplateId) {
+      setError("テンプレートを選択してください");
+      setLoading(false);
+      return;
+    }
+
     const workspaceData: CreateWorkspaceData = {
       name: name.trim(),
+      templateId: selectedTemplateId,
+      ownerId: "default-user", // TODO: 実際のユーザーIDを取得
+      ownerName: "Default User", // TODO: 実際のユーザー名を取得  
       sessionId: selectedSessionId,
-      templateId: selectedTemplateId || undefined,
-      autoStartSchedule: autoStartSchedule || undefined,
       ttlMs: ttlMs,
-      automaticUpdates: automaticUpdates,
-      richParameterValues: parameters,
+      autoStart: automaticUpdates,
     };
 
     try {

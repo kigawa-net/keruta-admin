@@ -49,25 +49,23 @@ export interface CoderTemplate {
   workspaceCount: number;
 }
 
-// Workspace Types
+// Coder Workspace Types (Updated for Coder API proxy)
 export interface Workspace {
   id: string;
   name: string;
-  sessionId: string;
+  ownerId: string;
+  ownerName: string;
   templateId: string;
+  templateName: string;
   status: string;
+  health: string;
+  accessUrl?: string | null;
+  autoStart: boolean;
+  ttlMs: number;
+  lastUsedAt?: string | null;
   createdAt: string;
   updatedAt: string;
-  lastUsedAt?: string | null;
-  resourceInfo?: WorkspaceResourceInfo | null;
-}
-
-export interface WorkspaceResourceInfo {
-  kubernetesNamespace: string;
-  persistentVolumeClaimName: string;
-  podName?: string;
-  serviceName?: string;
-  ingressUrl?: string;
+  sessionId?: string | null;
 }
 
 // API Response Types
@@ -108,16 +106,26 @@ export interface SessionTemplateConfig {
   parameters: Record<string, string>;
 }
 
-// Workspace Form Types
+// Coder Workspace Form Types (Updated for Coder API proxy)
 export interface CreateWorkspaceData {
   name: string;
+  templateId: string;
+  ownerId: string;
+  ownerName: string;
   sessionId: string;
-  templateId?: string;
-  templateVersionId?: string;
-  autoStartSchedule?: string;
   ttlMs?: number;
-  automaticUpdates?: boolean;
-  richParameterValues?: Record<string, string>;
+  autoStart?: boolean;
+  parameters?: Record<string, string>;
+}
+
+export interface UpdateWorkspaceData {
+  name: string;
+  ownerId: string;
+  ownerName: string;
+  templateId: string;
+  ttlMs?: number;
+  autoStart?: boolean;
+  parameters?: Record<string, string>;
 }
 
 export interface WorkspaceTemplate {
@@ -127,19 +135,7 @@ export interface WorkspaceTemplate {
   version: string;
   icon?: string;
   isDefault: boolean;
-  parameters: WorkspaceTemplateParameter[];
   createdAt: string;
   updatedAt: string;
 }
 
-export interface WorkspaceTemplateParameter {
-  name: string;
-  displayName: string;
-  description?: string;
-  type: string;
-  required: boolean;
-  defaultValue?: string;
-  options: string[];
-  validationRegex?: string;
-  mutable: boolean;
-}
