@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { Form, useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { getSession, updateSession, getTemplateContent, updateTemplateContent } from "~/utils/api";
+import { getSession, updateSession } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
-import { Session, TerraformTemplateConfig } from "~/types";
+import { Session, SessionTemplateConfig } from "~/types";
 
 export const meta: MetaFunction = () => {
   return [
@@ -23,32 +23,23 @@ export default function EditSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [metadata, setMetadata] = useState<Record<string, string>>({});
-  const [metadataKey, setMetadataKey] = useState("");
-  const [metadataValue, setMetadataValue] = useState("");
+  const [repositoryUrl, setRepositoryUrl] = useState<string>("");
+  const [repositoryRef, setRepositoryRef] = useState<string>("main");
   
-  // Terraform template configuration state
-  const [terraformConfig, setTerraformConfig] = useState<TerraformTemplateConfig>({
-    templatePath: "/terraform-templates/coder-workspace",
-    storageClassName: "standard",
-    storageSize: "10Gi",
-    mountPath: "/home/coder/shared",
-    variables: {},
-    enabled: true, // 常に有効
-    claudeCodeConfig: {
-      enabled: true,
-      apiKey: "",
-      nodeVersion: "20"
-    }
+  // Session template configuration state
+  const [templateConfig, setTemplateConfig] = useState<SessionTemplateConfig>({
+    templateId: null,
+    templateName: null,
+    repositoryUrl: null,
+    repositoryRef: "main",
+    templatePath: ".",
+    preferredKeywords: [],
+    parameters: {}
   });
-  const [varKey, setVarKey] = useState("");
-  const [varValue, setVarValue] = useState("");
+  const [paramKey, setParamKey] = useState("");
+  const [paramValue, setParamValue] = useState("");
+  const [keywordInput, setKeywordInput] = useState("");
   
-  // Template content state
-  const [templateContent, setTemplateContent] = useState("");
-  const [templateLoading, setTemplateLoading] = useState(false);
-  const [templateError, setTemplateError] = useState<string | null>(null);
-  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
 
   // セッション情報を取得
   const fetchSession = async (clientState: ClientState) => {
@@ -59,11 +50,12 @@ export default function EditSession() {
       const data = await getSession(clientState, id);
       setSession(data);
       setTags(data.tags || []);
-      setMetadata(data.metadata || {});
+      setRepositoryUrl(data.repositoryUrl || "");
+      setRepositoryRef(data.repositoryRef || "main");
       
-      // Load terraform template configuration if it exists
-      if (data.terraformTemplateConfig) {
-        setTerraformConfig(data.terraformTemplateConfig);
+      // Load session template configuration if it exists
+      if (data.templateConfig) {
+        setTemplateConfig(data.templateConfig);
       }
     } catch (err) {
       console.error("Failed to fetch session:", err);
@@ -90,86 +82,49 @@ export default function EditSession() {
     setTags(tags.filter((_, i) => i !== index));
   };
 
-  // メタデータ追加ハンドラ
-  const handleAddMetadata = () => {
-    if (metadataKey.trim() && metadataValue.trim()) {
-      setMetadata({...metadata, [metadataKey.trim()]: metadataValue.trim()});
-      setMetadataKey("");
-      setMetadataValue("");
-    }
-  };
-
-  // メタデータ削除ハンドラ
-  const handleRemoveMetadata = (key: string) => {
-    const newMetadata = {...metadata};
-    delete newMetadata[key];
-    setMetadata(newMetadata);
-  };
-
-  // Terraform template configuration handlers
-  const handleAddVariable = () => {
-    if (varKey.trim() && varValue.trim()) {
-      setTerraformConfig({
-        ...terraformConfig,
-        variables: {
-          ...terraformConfig.variables,
-          [varKey.trim()]: varValue.trim()
-        }
+  // キーワード追加ハンドラ
+  const handleAddKeyword = () => {
+    if (keywordInput.trim() && !templateConfig.preferredKeywords.includes(keywordInput.trim())) {
+      setTemplateConfig({
+        ...templateConfig,
+        preferredKeywords: [...templateConfig.preferredKeywords, keywordInput.trim()]
       });
-      setVarKey("");
-      setVarValue("");
+      setKeywordInput("");
     }
   };
 
-  const handleRemoveVariable = (key: string) => {
-    const newVariables = {...terraformConfig.variables};
-    delete newVariables[key];
-    setTerraformConfig({
-      ...terraformConfig,
-      variables: newVariables
+  // キーワード削除ハンドラ
+  const handleRemoveKeyword = (index: number) => {
+    setTemplateConfig({
+      ...templateConfig,
+      preferredKeywords: templateConfig.preferredKeywords.filter((_, i) => i !== index)
     });
   };
 
-  // Template content handlers
-  const loadTemplateContent = async () => {
-    if (clientState.state === "loading" || !terraformConfig.templatePath) return;
-    
-    try {
-      setTemplateLoading(true);
-      setTemplateError(null);
-      const mainTfPath = `${terraformConfig.templatePath}/main.tf`;
-      const data = await getTemplateContent(clientState, mainTfPath);
-      setTemplateContent(data.content);
-    } catch (err) {
-      console.error("Failed to load template content:", err);
-      setTemplateError(err instanceof Error ? err.message : "テンプレートの読み込みに失敗しました。");
-    } finally {
-      setTemplateLoading(false);
+  // パラメータハンドラ
+  const handleAddParameter = () => {
+    if (paramKey.trim() && paramValue.trim()) {
+      setTemplateConfig({
+        ...templateConfig,
+        parameters: {
+          ...templateConfig.parameters,
+          [paramKey.trim()]: paramValue.trim()
+        }
+      });
+      setParamKey("");
+      setParamValue("");
     }
   };
 
-  const saveTemplateContent = async () => {
-    if (clientState.state === "loading" || !terraformConfig.templatePath) return;
-    
-    try {
-      setTemplateLoading(true);
-      setTemplateError(null);
-      const mainTfPath = `${terraformConfig.templatePath}/main.tf`;
-      await updateTemplateContent(clientState, mainTfPath, templateContent);
-      alert("テンプレートが保存されました。");
-    } catch (err) {
-      console.error("Failed to save template content:", err);
-      setTemplateError(err instanceof Error ? err.message : "テンプレートの保存に失敗しました。");
-    } finally {
-      setTemplateLoading(false);
-    }
+  const handleRemoveParameter = (key: string) => {
+    const newParameters = {...templateConfig.parameters};
+    delete newParameters[key];
+    setTemplateConfig({
+      ...templateConfig,
+      parameters: newParameters
+    });
   };
 
-  useEffect(() => {
-    if (showTemplateEditor && terraformConfig.templatePath && !templateContent) {
-      loadTemplateContent();
-    }
-  }, [showTemplateEditor, terraformConfig.templatePath, clientState]);
 
   // フォーム送信ハンドラ
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -187,16 +142,11 @@ export default function EditSession() {
       description: (formData.get("description") as string) || undefined,
       status: formData.get("status") as string,
       tags: tags,
-      metadata: metadata,
-      templateConfig: terraformConfig.enabled ? {
-        templateId: null,
-        templateName: null,
-        repositoryUrl: null,
-        repositoryRef: "main",
-        templatePath: terraformConfig.templatePath,
-        preferredKeywords: [],
-        parameters: terraformConfig.variables
-      } : undefined,
+      repositoryUrl: repositoryUrl || undefined,
+      repositoryRef: repositoryRef,
+      templateConfig: templateConfig.templateId || templateConfig.templateName || templateConfig.repositoryUrl || 
+                     templateConfig.templatePath !== "." || templateConfig.preferredKeywords.length > 0 || 
+                     Object.keys(templateConfig.parameters).length > 0 ? templateConfig : undefined,
     };
 
     try {
@@ -328,372 +278,212 @@ export default function EditSession() {
                 </div>
               </div>
 
-              {/* メタデータ管理 */}
+              {/* リポジトリ情報 */}
               <div className="mb-3">
-                <label className="form-label">メタデータ</label>
+                <label className="form-label">リポジトリ情報</label>
                 <div className="row mb-2">
-                  <div className="col-5">
+                  <div className="col-md-8">
+                    <label htmlFor="repositoryUrl" className="form-label">リポジトリURL</label>
+                    <input
+                      type="url"
+                      className="form-control"
+                      id="repositoryUrl"
+                      placeholder="https://github.com/user/repo.git"
+                      value={repositoryUrl}
+                      onChange={(e) => setRepositoryUrl(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label htmlFor="repositoryRef" className="form-label">ブランチ/タグ</label>
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="キー"
-                      value={metadataKey}
-                      onChange={(e) => setMetadataKey(e.target.value)}
+                      id="repositoryRef"
+                      placeholder="main"
+                      value={repositoryRef}
+                      onChange={(e) => setRepositoryRef(e.target.value)}
                     />
                   </div>
-                  <div className="col-5">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="値"
-                      value={metadataValue}
-                      onChange={(e) => setMetadataValue(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-2">
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary w-100"
-                      onClick={handleAddMetadata}
-                    >
-                      追加
-                    </button>
-                  </div>
-                </div>
-                <div className="list-group">
-                  {Object.entries(metadata).map(([key, value]) => (
-                    <div key={key} className="list-group-item d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong>{key}:</strong> {value}
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleRemoveMetadata(key)}
-                      >
-                        削除
-                      </button>
-                    </div>
-                  ))}
                 </div>
               </div>
 
-              {/* Terraform Template Configuration */}
+              {/* Session Template Configuration */}
               <div className="mb-3">
-                <label className="form-label">Terraformテンプレート設定</label>
+                <label className="form-label">テンプレート設定</label>
                 <div className="card">
                   <div className="card-body">
-                    <div className="alert alert-info mb-3">
-                      <div className="d-flex align-items-center">
-                        <i className="bi bi-info-circle me-2"></i>
-                        <span><strong>Terraformテンプレート:</strong> すべてのセッションで自動的に有効化されます</span>
+
+                    <div className="row mb-3">
+                      <div className="col-md-6">
+                        <label htmlFor="templateId" className="form-label">テンプレーID</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="templateId"
+                          placeholder="ubuntu-basic"
+                          value={templateConfig.templateId || ""}
+                          onChange={(e) => setTemplateConfig({
+                            ...templateConfig,
+                            templateId: e.target.value || null
+                          })}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label htmlFor="templateName" className="form-label">テンプレート名</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="templateName"
+                          placeholder="Ubuntu Basic"
+                          value={templateConfig.templateName || ""}
+                          onChange={(e) => setTemplateConfig({
+                            ...templateConfig,
+                            templateName: e.target.value || null
+                          })}
+                        />
                       </div>
                     </div>
 
-                    {/* Terraformテンプレートは常に有効 */}
-                    {(
-                      <>
-                        <div className="row mb-3">
-                          <div className="col-md-6">
-                            <label htmlFor="terraformTemplatePath" className="form-label">テンプレートパス</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              id="terraformTemplatePath"
-                              placeholder="/terraform-templates/coder-workspace"
-                              value={terraformConfig.templatePath}
-                              onChange={(e) => setTerraformConfig({
-                                ...terraformConfig,
-                                templatePath: e.target.value
-                              })}
-                            />
-                          </div>
-                          <div className="col-md-3">
-                            <label htmlFor="storageClassName" className="form-label">ストレージクラス</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              id="storageClassName"
-                              placeholder="standard"
-                              value={terraformConfig.storageClassName || ""}
-                              onChange={(e) => setTerraformConfig({
-                                ...terraformConfig,
-                                storageClassName: e.target.value || undefined
-                              })}
-                            />
-                          </div>
-                          <div className="col-md-3">
-                            <label htmlFor="storageSize" className="form-label">ストレージサイズ</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              id="storageSize"
-                              placeholder="10Gi"
-                              value={terraformConfig.storageSize || ""}
-                              onChange={(e) => setTerraformConfig({
-                                ...terraformConfig,
-                                storageSize: e.target.value || undefined
-                              })}
-                            />
-                          </div>
-                        </div>
+                    <div className="row mb-3">
+                      <div className="col-md-8">
+                        <label htmlFor="templateRepositoryUrl" className="form-label">テンプレートリポジトリURL</label>
+                        <input
+                          type="url"
+                          className="form-control"
+                          id="templateRepositoryUrl"
+                          placeholder="https://github.com/user/template-repo.git"
+                          value={templateConfig.repositoryUrl || ""}
+                          onChange={(e) => setTemplateConfig({
+                            ...templateConfig,
+                            repositoryUrl: e.target.value || null
+                          })}
+                        />
+                      </div>
+                      <div className="col-md-4">
+                        <label htmlFor="templateRepositoryRef" className="form-label">テンプレートブランチ</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="templateRepositoryRef"
+                          placeholder="main"
+                          value={templateConfig.repositoryRef}
+                          onChange={(e) => setTemplateConfig({
+                            ...templateConfig,
+                            repositoryRef: e.target.value
+                          })}
+                        />
+                      </div>
+                    </div>
 
-                        <div className="mb-3">
-                          <label htmlFor="mountPath" className="form-label">マウントパス</label>
+                    <div className="mb-3">
+                      <label htmlFor="templatePath" className="form-label">テンプレートパス</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="templatePath"
+                        placeholder="."
+                        value={templateConfig.templatePath}
+                        onChange={(e) => setTemplateConfig({
+                          ...templateConfig,
+                          templatePath: e.target.value
+                        })}
+                      />
+                    </div>
+
+                    {/* Preferred Keywords */}
+                    <div className="mb-3">
+                      <label className="form-label">優先キーワード</label>
+                      <div className="input-group mb-2">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="キーワードを入力してください"
+                          value={keywordInput}
+                          onChange={(e) => setKeywordInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddKeyword();
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={handleAddKeyword}
+                        >
+                          追加
+                        </button>
+                      </div>
+                      <div className="d-flex flex-wrap">
+                        {templateConfig.preferredKeywords.map((keyword, index) => (
+                          <span key={index} className="badge bg-secondary me-2 mb-2">
+                            {keyword}
+                            <button
+                              type="button"
+                              className="btn-close btn-close-white ms-2"
+                              aria-label="削除"
+                              onClick={() => handleRemoveKeyword(index)}
+                              style={{fontSize: "0.7em"}}
+                            />
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Template Parameters */}
+                    <div className="mb-3">
+                      <label className="form-label">テンプレートパラメータ</label>
+                      <div className="row mb-2">
+                        <div className="col-5">
                           <input
                             type="text"
                             className="form-control"
-                            id="mountPath"
-                            placeholder="/home/coder/shared"
-                            value={terraformConfig.mountPath || ""}
-                            onChange={(e) => setTerraformConfig({
-                              ...terraformConfig,
-                              mountPath: e.target.value || undefined
-                            })}
+                            placeholder="パラメータ名"
+                            value={paramKey}
+                            onChange={(e) => setParamKey(e.target.value)}
                           />
                         </div>
-
-                        {/* Terraform Variables */}
-                        <div className="mb-3">
-                          <label className="form-label">Terraform変数</label>
-                          <div className="row mb-2">
-                            <div className="col-5">
-                              <input
-                                type="text"
-                                className="form-control"
-                                placeholder="変数名"
-                                value={varKey}
-                                onChange={(e) => setVarKey(e.target.value)}
-                              />
-                            </div>
-                            <div className="col-5">
-                              <input
-                                type="text"
-                                className="form-control"
-                                placeholder="変数値"
-                                value={varValue}
-                                onChange={(e) => setVarValue(e.target.value)}
-                              />
-                            </div>
-                            <div className="col-2">
-                              <button
-                                type="button"
-                                className="btn btn-outline-secondary w-100"
-                                onClick={handleAddVariable}
-                              >
-                                追加
-                              </button>
-                            </div>
-                          </div>
-                          <div className="list-group">
-                            {Object.entries(terraformConfig.variables).map(([key, value]) => (
-                              <div key={key} className="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                  <strong>{key}:</strong> {value}
-                                </div>
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => handleRemoveVariable(key)}
-                                >
-                                  削除
-                                </button>
-                              </div>
-                            ))}
-                          </div>
+                        <div className="col-5">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="パラメータ値"
+                            value={paramValue}
+                            onChange={(e) => setParamValue(e.target.value)}
+                          />
                         </div>
-
-                        {/* Claude Code設定 */}
-                        <div className="mb-4">
-                          <h6 className="text-muted mb-3">🤖 Claude Code設定</h6>
-                          <div className="form-check mb-3">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="claudeCodeEnabled"
-                              checked={terraformConfig.claudeCodeConfig?.enabled || false}
-                              onChange={(e) => setTerraformConfig({
-                                ...terraformConfig,
-                                claudeCodeConfig: {
-                                  ...terraformConfig.claudeCodeConfig,
-                                  enabled: e.target.checked,
-                                  apiKey: terraformConfig.claudeCodeConfig?.apiKey || "",
-                                  nodeVersion: terraformConfig.claudeCodeConfig?.nodeVersion || "20"
-                                }
-                              })}
-                            />
-                            <label className="form-check-label" htmlFor="claudeCodeEnabled">
-                              Claude Codeを有効化（ワークスペースにClaude CLI toolを自動インストール）
-                            </label>
-                          </div>
-
-                          {terraformConfig.claudeCodeConfig?.enabled && (
-                            <>
-                              <div className="row mb-3">
-                                <div className="col-md-8">
-                                  <label htmlFor="claudeApiKey" className="form-label">
-                                    Anthropic API Key
-                                    <small className="text-muted ms-2">（オプション - 後でユーザーが設定可能）</small>
-                                  </label>
-                                  <input
-                                    type="password"
-                                    className="form-control"
-                                    id="claudeApiKey"
-                                    placeholder="sk-ant-api03-..."
-                                    value={terraformConfig.claudeCodeConfig?.apiKey || ""}
-                                    onChange={(e) => setTerraformConfig({
-                                      ...terraformConfig,
-                                      claudeCodeConfig: {
-                                        ...terraformConfig.claudeCodeConfig!,
-                                        apiKey: e.target.value
-                                      }
-                                    })}
-                                  />
-                                  <div className="form-text">
-                                    空の場合、ユーザーは `claude-code auth` コマンドで後から設定できます
-                                  </div>
-                                </div>
-                                <div className="col-md-4">
-                                  <label htmlFor="nodeVersion" className="form-label">Node.js Version</label>
-                                  <select
-                                    className="form-select"
-                                    id="nodeVersion"
-                                    value={terraformConfig.claudeCodeConfig?.nodeVersion || "20"}
-                                    onChange={(e) => setTerraformConfig({
-                                      ...terraformConfig,
-                                      claudeCodeConfig: {
-                                        ...terraformConfig.claudeCodeConfig!,
-                                        nodeVersion: e.target.value
-                                      }
-                                    })}
-                                  >
-                                    <option value="18">Node.js 18</option>
-                                    <option value="20">Node.js 20</option>
-                                    <option value="22">Node.js 22</option>
-                                  </select>
-                                </div>
-                              </div>
-
-                              <div className="alert alert-info">
-                                <div className="d-flex align-items-start">
-                                  <i className="bi bi-info-circle me-2 mt-1"></i>
-                                  <div>
-                                    <strong>Claude Code機能:</strong>
-                                    <ul className="mb-0 mt-1">
-                                      <li>ターミナルでのClaude AI統合</li>
-                                      <li>コードベース全体の理解とナビゲーション</li>
-                                      <li>VS Code, JetBrains IDEとの統合</li>
-                                      <li>コマンドライン: <code>claude-code</code> または <code>cc</code></li>
-                                    </ul>
-                                  </div>
-                                </div>
-                              </div>
-                            </>
-                          )}
+                        <div className="col-2">
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary w-100"
+                            onClick={handleAddParameter}
+                          >
+                            追加
+                          </button>
                         </div>
-                      </>
-                    )}
+                      </div>
+                      <div className="list-group">
+                        {Object.entries(templateConfig.parameters).map(([key, value]) => (
+                          <div key={key} className="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                              <strong>{key}:</strong> {value}
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleRemoveParameter(key)}
+                            >
+                              削除
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
-
-              {/* Template Editor Section */}
-              {terraformConfig.templatePath && (
-                <div className="mb-3">
-                  <label className="form-label">main.tf編集</label>
-                  <div className="card">
-                    <div className="card-header d-flex justify-content-between align-items-center">
-                      <h6 className="card-title mb-0">
-                        {terraformConfig.templatePath}/main.tf
-                        {templateContent && (
-                          <small className="text-muted ms-2">
-                            ({templateContent.split('\n').length}行, {templateContent.length}文字)
-                          </small>
-                        )}
-                      </h6>
-                      <div className="d-flex gap-2">
-                        {!showTemplateEditor ? (
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => setShowTemplateEditor(true)}
-                            disabled={templateLoading}
-                          >
-                            編集
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-success"
-                              onClick={saveTemplateContent}
-                              disabled={templateLoading}
-                            >
-                              {templateLoading ? '保存中...' : '保存'}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={() => setShowTemplateEditor(false)}
-                              disabled={templateLoading}
-                            >
-                              閉じる
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {showTemplateEditor && (
-                      <div className="card-body p-0">
-                        {templateError && (
-                          <div className="alert alert-danger m-3 mb-0">
-                            {templateError}
-                          </div>
-                        )}
-                        
-                        {templateLoading ? (
-                          <div className="d-flex justify-content-center align-items-center p-4">
-                            <div className="spinner-border" role="status">
-                              <span className="visually-hidden">読み込み中...</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <textarea
-                            value={templateContent}
-                            onChange={(e) => setTemplateContent(e.target.value)}
-                            className="form-control border-0"
-                            style={{
-                              minHeight: "400px",
-                              fontFamily: "'Source Code Pro', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
-                              fontSize: "14px",
-                              resize: "vertical",
-                              lineHeight: "1.5",
-                              tabSize: 2
-                            }}
-                            placeholder="Terraformコードを入力してください..."
-                            onKeyDown={(e) => {
-                              // Tab キーでインデント挿入
-                              if (e.key === 'Tab') {
-                                e.preventDefault();
-                                const start = e.currentTarget.selectionStart;
-                                const end = e.currentTarget.selectionEnd;
-                                const value = e.currentTarget.value;
-                                const newValue = value.substring(0, start) + '  ' + value.substring(end);
-                                setTemplateContent(newValue);
-                                // カーソル位置を調整
-                                setTimeout(() => {
-                                  e.currentTarget.setSelectionRange(start + 2, start + 2);
-                                });
-                              }
-                            }}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {error && (
                 <div className="alert alert-danger" role="alert">

@@ -1,4 +1,3 @@
-import {cssBundleHref} from "@remix-run/css-bundle";
 import type {LinksFunction} from "@remix-run/node";
 import {Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData,} from "@remix-run/react";
 
@@ -8,7 +7,6 @@ import bootstrapStyles from "bootstrap/dist/css/bootstrap.min.css";
 import {ClientProvider, loadClientState, LoadedClientState} from "~/components/Client";
 
 export const links: LinksFunction = () => [
-    ...(cssBundleHref ? [{rel: "stylesheet", href: cssBundleHref}] : []),
     {rel: "stylesheet", href: bootstrapStyles},
 ];
 

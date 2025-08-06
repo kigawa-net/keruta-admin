@@ -25,8 +25,9 @@ export interface Session {
   description?: string | null;
   status: string;
   tags: string[];
-  metadata: Record<string, string>;
-  terraformTemplateConfig?: TerraformTemplateConfig | null;
+  repositoryUrl?: string | null;
+  repositoryRef: string;
+  templateConfig?: SessionTemplateConfig | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -92,7 +93,8 @@ export interface SessionFormData {
   description?: string;
   status: string;
   tags: string[];
-  metadata: Record<string, string>;
+  repositoryUrl?: string;
+  repositoryRef: string;
   templateConfig?: SessionTemplateConfig;
 }
 
