@@ -30,8 +30,6 @@ export default function EditSession() {
   const [templateConfig, setTemplateConfig] = useState<SessionTemplateConfig>({
     templateId: null,
     templateName: null,
-    repositoryUrl: null,
-    repositoryRef: "main",
     templatePath: ".",
     preferredKeywords: [],
     parameters: {}
@@ -144,7 +142,7 @@ export default function EditSession() {
       tags: tags,
       repositoryUrl: repositoryUrl || undefined,
       repositoryRef: repositoryRef,
-      templateConfig: templateConfig.templateId || templateConfig.templateName || templateConfig.repositoryUrl || 
+      templateConfig: templateConfig.templateId || templateConfig.templateName || 
                      templateConfig.templatePath !== "." || templateConfig.preferredKeywords.length > 0 || 
                      Object.keys(templateConfig.parameters).length > 0 ? templateConfig : undefined,
     };
@@ -344,34 +342,21 @@ export default function EditSession() {
                       </div>
                     </div>
 
-                    <div className="row mb-3">
-                      <div className="col-md-8">
-                        <label htmlFor="templateRepositoryUrl" className="form-label">テンプレートリポジトリURL</label>
-                        <input
-                          type="url"
-                          className="form-control"
-                          id="templateRepositoryUrl"
-                          placeholder="https://github.com/user/template-repo.git"
-                          value={templateConfig.repositoryUrl || ""}
-                          onChange={(e) => setTemplateConfig({
-                            ...templateConfig,
-                            repositoryUrl: e.target.value || null
-                          })}
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label htmlFor="templateRepositoryRef" className="form-label">テンプレートブランチ</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="templateRepositoryRef"
-                          placeholder="main"
-                          value={templateConfig.repositoryRef}
-                          onChange={(e) => setTemplateConfig({
-                            ...templateConfig,
-                            repositoryRef: e.target.value
-                          })}
-                        />
+                    <div className="mb-3">
+                      <label htmlFor="templatePath" className="form-label">テンプレートパス</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="templatePath"
+                        placeholder="."
+                        value={templateConfig.templatePath}
+                        onChange={(e) => setTemplateConfig({
+                          ...templateConfig,
+                          templatePath: e.target.value
+                        })}
+                      />
+                      <div className="form-text">
+                        テンプレートファイルがあるディレクトリパス（デフォルト: .）
                       </div>
                     </div>
 

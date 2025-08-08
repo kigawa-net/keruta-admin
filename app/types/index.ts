@@ -101,8 +101,6 @@ export interface SessionFormData {
 export interface SessionTemplateConfig {
   templateId: string | null;
   templateName: string | null;
-  repositoryUrl: string | null;
-  repositoryRef: string;
   templatePath: string;
   preferredKeywords: string[];
   parameters: Record<string, string>;

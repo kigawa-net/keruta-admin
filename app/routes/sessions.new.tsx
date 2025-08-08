@@ -34,8 +34,6 @@ export default function NewSession() {
   const [templateConfig, setTemplateConfig] = useState<SessionTemplateConfig>({
     templateId: null,
     templateName: null,
-    repositoryUrl: null,
-    repositoryRef: "main",
     templatePath: "/terraform-templates/coder-workspace",
     preferredKeywords: [],
     parameters: {

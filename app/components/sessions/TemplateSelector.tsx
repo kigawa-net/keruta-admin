@@ -95,34 +95,21 @@ export default function TemplateSelector({
                     </div>
                   </div>
 
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <label htmlFor="repositoryRef" className="form-label">リポジトリ参照</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="repositoryRef"
-                        placeholder="main"
-                        value={templateConfig.repositoryRef}
-                        onChange={(e) => onTemplateConfigChange({
-                          ...templateConfig,
-                          repositoryRef: e.target.value
-                        })}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label htmlFor="repositoryUrl" className="form-label">リポジトリURL（オプション）</label>
-                      <input
-                        type="url"
-                        className="form-control"
-                        id="repositoryUrl"
-                        placeholder="https://github.com/your-org/templates"
-                        value={templateConfig.repositoryUrl || ""}
-                        onChange={(e) => onTemplateConfigChange({
-                          ...templateConfig,
-                          repositoryUrl: e.target.value || null
-                        })}
-                      />
+                  <div className="mb-3">
+                    <label htmlFor="templatePath" className="form-label">テンプレートパス</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="templatePath"
+                      placeholder="."
+                      value={templateConfig.templatePath}
+                      onChange={(e) => onTemplateConfigChange({
+                        ...templateConfig,
+                        templatePath: e.target.value
+                      })}
+                    />
+                    <div className="form-text">
+                      テンプレートファイルがあるディレクトリパス（デフォルト: .）
                     </div>
                   </div>
 
