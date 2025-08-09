@@ -32,11 +32,6 @@ export default function Layout({ children }: LayoutProps) {
                 </Link>
               </li>
               <li className="nav-item">
-                <Link to="/agents" className="nav-link">
-                  エージェント管理
-                </Link>
-              </li>
-              <li className="nav-item">
                 <Link to="/documents" className="nav-link">
                   ドキュメント管理
                 </Link>
