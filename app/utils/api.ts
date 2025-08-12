@@ -7,7 +7,7 @@
 
 import {LoadedClientState} from "~/components/Client";
 import {createFetchOptions} from "~/utils/apiConfig";
-import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, UpdateWorkspaceData, WorkspaceTemplate} from "~/types";
+import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, UpdateWorkspaceData, WorkspaceTemplate, Task, TaskLog, CreateTaskLogData} from "~/types";
 
 /**
  * Generic API error class
@@ -238,4 +238,59 @@ export async function getWorkspaceBySessionId(clientState: LoadedClientState, se
 
 export async function getWorkspaceTemplates(clientState: LoadedClientState): Promise<WorkspaceTemplate[]> {
     return apiGet<WorkspaceTemplate[]>(clientState, "workspaces/templates");
+}
+
+// Task API Functions
+export async function getTasks(clientState: LoadedClientState): Promise<Task[]> {
+    return apiGet<Task[]>(clientState, "tasks");
+}
+
+export async function getTask(clientState: LoadedClientState, taskId: string): Promise<Task> {
+    return apiGet<Task>(clientState, `tasks/${taskId}`);
+}
+
+export async function deleteTask(clientState: LoadedClientState, taskId: string): Promise<void> {
+    return apiDelete(clientState, `tasks/${taskId}`);
+}
+
+// Task Log API Functions
+export async function getTaskLogs(
+    clientState: LoadedClientState, 
+    taskId: string,
+    filters?: {
+        level?: string;
+        startTime?: string;
+        endTime?: string;
+    }
+): Promise<TaskLog[]> {
+    let endpoint = `tasks/${taskId}/logs`;
+    const params = new URLSearchParams();
+    
+    if (filters?.level) {
+        params.append('level', filters.level);
+    }
+    if (filters?.startTime) {
+        params.append('startTime', filters.startTime);
+    }
+    if (filters?.endTime) {
+        params.append('endTime', filters.endTime);
+    }
+    
+    if (params.toString()) {
+        endpoint += `?${params.toString()}`;
+    }
+    
+    return apiGet<TaskLog[]>(clientState, endpoint);
+}
+
+export async function createTaskLog(clientState: LoadedClientState, taskId: string, logData: CreateTaskLogData): Promise<TaskLog> {
+    return apiPost<TaskLog, CreateTaskLogData>(clientState, `tasks/${taskId}/logs`, logData);
+}
+
+export async function getTaskLogCount(clientState: LoadedClientState, taskId: string): Promise<{ count: number }> {
+    return apiGet<{ count: number }>(clientState, `tasks/${taskId}/logs/count`);
+}
+
+export async function deleteTaskLogs(clientState: LoadedClientState, taskId: string): Promise<void> {
+    return apiDelete(clientState, `tasks/${taskId}/logs`);
 }

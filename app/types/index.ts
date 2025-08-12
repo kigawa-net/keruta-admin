@@ -139,3 +139,38 @@ export interface WorkspaceTemplate {
   updatedAt: string;
 }
 
+// Task Types
+export interface Task {
+  id: string;
+  sessionId: string;
+  name: string;
+  description: string;
+  script: string;
+  status: string;
+  message: string;
+  progress: number;
+  errorCode: string;
+  parameters: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Task Log Types
+export interface TaskLog {
+  id: string;
+  taskId: string;
+  sessionId: string;
+  level: string;
+  source: string;
+  message: string;
+  timestamp: string;
+  metadata: Record<string, any>;
+}
+
+export interface CreateTaskLogData {
+  level: string;
+  message: string;
+  source?: string;
+  metadata?: Record<string, any>;
+}
+
