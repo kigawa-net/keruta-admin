@@ -324,36 +324,6 @@ export default function SessionDetails() {
           </div>
         </div>
 
-        {/* メタデータ情報 */}
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5 className="card-title">メタデータ</h5>
-          </div>
-          <div className="card-body">
-            {Object.keys(session.metadata).length > 0 ? (
-              <div className="table-responsive">
-                <table className="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>キー</th>
-                      <th>値</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(session.metadata).map(([key, value]) => (
-                      <tr key={key}>
-                        <td><strong>{key}</strong></td>
-                        <td>{value}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-muted">メタデータはありません。</p>
-            )}
-          </div>
-        </div>
 
         {/* Terraform Template Configuration */}
         {session.terraformTemplateConfig && (

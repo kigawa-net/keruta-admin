@@ -28,6 +28,7 @@ export interface Session {
   repositoryUrl?: string | null;
   repositoryRef: string;
   templateConfig?: SessionTemplateConfig | null;
+  terraformTemplateConfig?: TerraformTemplateConfig | null;
   createdAt: string;
   updatedAt: string;
 }
