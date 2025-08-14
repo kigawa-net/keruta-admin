@@ -5,7 +5,7 @@
  * It uses the backend configuration from backendConfig.server.ts.
  */
 
-import {LoadedClientState} from "~/components/Client";
+import {ClientState} from "~/components/Client";
 import {createFetchOptions} from "~/utils/apiConfig";
 import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, UpdateWorkspaceData, WorkspaceTemplate, Task, TaskLog, CreateTaskLogData} from "~/types";
 
@@ -29,8 +29,12 @@ export class ApiError extends Error {
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiGet<T>(clientState: LoadedClientState
-    , endpoint: string): Promise<T> {
+export async function apiGet<T>(clientState: ClientState, endpoint: string): Promise<T> {
+    // Type guard: throw error if loading state
+    if (clientState.state === "loading") {
+        throw new ApiError("Client is still loading", 503);
+    }
+
     // Use the API URL from backendConfig
     const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
@@ -51,7 +55,11 @@ export async function apiGet<T>(clientState: LoadedClientState
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiPost<T, D = Record<string, unknown>>(clientState: LoadedClientState, endpoint: string, data: D): Promise<T> {
+export async function apiPost<T, D = Record<string, unknown>>(clientState: ClientState, endpoint: string, data: D): Promise<T> {
+    // Type guard: throw error if loading state
+    if (clientState.state === "loading") {
+        throw new ApiError("Client is still loading", 503);
+    }
     // Use the API URL from backendConfig
     const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
@@ -85,7 +93,11 @@ export async function apiPost<T, D = Record<string, unknown>>(clientState: Loade
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiPut<T, D = Record<string, unknown>>(clientState: LoadedClientState, endpoint: string, data: D): Promise<T> {
+export async function apiPut<T, D = Record<string, unknown>>(clientState: ClientState, endpoint: string, data: D): Promise<T> {
+    // Type guard: throw error if loading state
+    if (clientState.state === "loading") {
+        throw new ApiError("Client is still loading", 503);
+    }
     // Use the API URL from backendConfig
     const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
@@ -118,7 +130,11 @@ export async function apiPut<T, D = Record<string, unknown>>(clientState: Loaded
  * @returns The response data
  * @throws ApiError if the request fails
  */
-export async function apiDelete<T>(clientState: LoadedClientState, endpoint: string): Promise<T | void> {
+export async function apiDelete<T>(clientState: ClientState, endpoint: string): Promise<T | void> {
+    // Type guard: throw error if loading state
+    if (clientState.state === "loading") {
+        throw new ApiError("Client is still loading", 503);
+    }
     // Use the API URL from backendConfig
     const baseUrl = clientState.apiUrl;
     const url = `${baseUrl}/${endpoint.replace(/^\//, '')}`;
@@ -142,120 +158,120 @@ export async function apiDelete<T>(clientState: LoadedClientState, endpoint: str
 }
 
 // Session API Functions
-export async function getSessions(clientState: LoadedClientState): Promise<Session[]> {
+export async function getSessions(clientState: ClientState): Promise<Session[]> {
     return apiGet<Session[]>(clientState, "sessions");
 }
 
-export async function getSession(clientState: LoadedClientState, sessionId: string): Promise<Session> {
+export async function getSession(clientState: ClientState, sessionId: string): Promise<Session> {
     return apiGet<Session>(clientState, `sessions/${sessionId}`);
 }
 
-export async function createSession(clientState: LoadedClientState, session: SessionFormData): Promise<Session> {
+export async function createSession(clientState: ClientState, session: SessionFormData): Promise<Session> {
     return apiPost<Session, SessionFormData>(clientState, "sessions", session);
 }
 
-export async function updateSession(clientState: LoadedClientState, sessionId: string, session: SessionFormData): Promise<Session> {
+export async function updateSession(clientState: ClientState, sessionId: string, session: SessionFormData): Promise<Session> {
     return apiPut<Session, SessionFormData>(clientState, `sessions/${sessionId}`, session);
 }
 
-export async function deleteSession(clientState: LoadedClientState, sessionId: string): Promise<void> {
+export async function deleteSession(clientState: ClientState, sessionId: string): Promise<void> {
     return apiDelete(clientState, `sessions/${sessionId}`);
 }
 
 // Coder Template API Functions
-export async function getCoderTemplates(clientState: LoadedClientState): Promise<CoderTemplate[]> {
+export async function getCoderTemplates(clientState: ClientState): Promise<CoderTemplate[]> {
     return apiGet<CoderTemplate[]>(clientState, "coder/templates");
 }
 
-export async function getCoderTemplate(clientState: LoadedClientState, templateId: string): Promise<CoderTemplate> {
+export async function getCoderTemplate(clientState: ClientState, templateId: string): Promise<CoderTemplate> {
     return apiGet<CoderTemplate>(clientState, `coder/templates/${templateId}`);
 }
 
 // Template content API Functions
-export async function getTemplateContent(clientState: LoadedClientState, templatePath: string): Promise<{content: string}> {
+export async function getTemplateContent(clientState: ClientState, templatePath: string): Promise<{content: string}> {
     return apiGet<{content: string}>(clientState, `templates/content?path=${encodeURIComponent(templatePath)}`);
 }
 
-export async function updateTemplateContent(clientState: LoadedClientState, templatePath: string, content: string): Promise<{success: boolean}> {
+export async function updateTemplateContent(clientState: ClientState, templatePath: string, content: string): Promise<{success: boolean}> {
     return apiPut<{success: boolean}, {content: string}>(clientState, `templates/content?path=${encodeURIComponent(templatePath)}`, {content});
 }
 
 // Templates API Functions
-export async function getTemplates(clientState: LoadedClientState): Promise<Template[]> {
+export async function getTemplates(clientState: ClientState): Promise<Template[]> {
     return apiGet<Template[]>(clientState, "templates");
 }
 
-export async function getTemplate(clientState: LoadedClientState, templateId: string): Promise<Template> {
+export async function getTemplate(clientState: ClientState, templateId: string): Promise<Template> {
     return apiGet<Template>(clientState, `templates/${templateId}`);
 }
 
 // Session synchronization API Functions
-export async function syncSessionStatus(clientState: LoadedClientState, sessionId: string): Promise<Session> {
+export async function syncSessionStatus(clientState: ClientState, sessionId: string): Promise<Session> {
     return apiPost<Session>(clientState, `sessions/${sessionId}/sync-status`, {});
 }
 
-export async function monitorSessionWorkspaces(clientState: LoadedClientState, sessionId: string): Promise<void> {
+export async function monitorSessionWorkspaces(clientState: ClientState, sessionId: string): Promise<void> {
     return apiPost<void>(clientState, `sessions/${sessionId}/monitor-workspaces`, {});
 }
 
 // Workspace API Functions
-export async function getWorkspaces(clientState: LoadedClientState, sessionId?: string): Promise<Workspace[]> {
+export async function getWorkspaces(clientState: ClientState, sessionId?: string): Promise<Workspace[]> {
     const endpoint = sessionId ? `workspaces?sessionId=${sessionId}` : "workspaces";
     return apiGet<Workspace[]>(clientState, endpoint);
 }
 
-export async function getWorkspace(clientState: LoadedClientState, workspaceId: string): Promise<Workspace> {
+export async function getWorkspace(clientState: ClientState, workspaceId: string): Promise<Workspace> {
     return apiGet<Workspace>(clientState, `workspaces/${workspaceId}`);
 }
 
-export async function createWorkspace(clientState: LoadedClientState, workspace: CreateWorkspaceData): Promise<Workspace> {
+export async function createWorkspace(clientState: ClientState, workspace: CreateWorkspaceData): Promise<Workspace> {
     return apiPost<Workspace, CreateWorkspaceData>(clientState, "workspaces", workspace);
 }
 
-export async function updateWorkspace(clientState: LoadedClientState, workspaceId: string, workspace: UpdateWorkspaceData): Promise<Workspace> {
+export async function updateWorkspace(clientState: ClientState, workspaceId: string, workspace: UpdateWorkspaceData): Promise<Workspace> {
     return apiPut<Workspace, UpdateWorkspaceData>(clientState, `workspaces/${workspaceId}`, workspace);
 }
 
-export async function updateWorkspaceStatus(clientState: LoadedClientState, workspaceId: string, status: string): Promise<Workspace> {
+export async function updateWorkspaceStatus(clientState: ClientState, workspaceId: string, status: string): Promise<Workspace> {
     return apiPut<Workspace, {status: string}>(clientState, `workspaces/${workspaceId}/status`, {status});
 }
 
-export async function startWorkspace(clientState: LoadedClientState, workspaceId: string): Promise<Workspace> {
+export async function startWorkspace(clientState: ClientState, workspaceId: string): Promise<Workspace> {
     return apiPost<Workspace>(clientState, `workspaces/${workspaceId}/start`, {});
 }
 
-export async function stopWorkspace(clientState: LoadedClientState, workspaceId: string): Promise<Workspace> {
+export async function stopWorkspace(clientState: ClientState, workspaceId: string): Promise<Workspace> {
     return apiPost<Workspace>(clientState, `workspaces/${workspaceId}/stop`, {});
 }
 
-export async function deleteWorkspace(clientState: LoadedClientState, workspaceId: string): Promise<void> {
+export async function deleteWorkspace(clientState: ClientState, workspaceId: string): Promise<void> {
     return apiDelete<void>(clientState, `workspaces/${workspaceId}`);
 }
 
-export async function getWorkspaceBySessionId(clientState: LoadedClientState, sessionId: string): Promise<Workspace> {
+export async function getWorkspaceBySessionId(clientState: ClientState, sessionId: string): Promise<Workspace> {
     return apiGet<Workspace>(clientState, `workspaces/session/${sessionId}`);
 }
 
-export async function getWorkspaceTemplates(clientState: LoadedClientState): Promise<WorkspaceTemplate[]> {
+export async function getWorkspaceTemplates(clientState: ClientState): Promise<WorkspaceTemplate[]> {
     return apiGet<WorkspaceTemplate[]>(clientState, "workspaces/templates");
 }
 
 // Task API Functions
-export async function getTasks(clientState: LoadedClientState): Promise<Task[]> {
+export async function getTasks(clientState: ClientState): Promise<Task[]> {
     return apiGet<Task[]>(clientState, "tasks");
 }
 
-export async function getTask(clientState: LoadedClientState, taskId: string): Promise<Task> {
+export async function getTask(clientState: ClientState, taskId: string): Promise<Task> {
     return apiGet<Task>(clientState, `tasks/${taskId}`);
 }
 
-export async function deleteTask(clientState: LoadedClientState, taskId: string): Promise<void> {
+export async function deleteTask(clientState: ClientState, taskId: string): Promise<void> {
     return apiDelete(clientState, `tasks/${taskId}`);
 }
 
 // Task Log API Functions
 export async function getTaskLogs(
-    clientState: LoadedClientState, 
+    clientState: ClientState, 
     taskId: string,
     filters?: {
         level?: string;
@@ -283,14 +299,14 @@ export async function getTaskLogs(
     return apiGet<TaskLog[]>(clientState, endpoint);
 }
 
-export async function createTaskLog(clientState: LoadedClientState, taskId: string, logData: CreateTaskLogData): Promise<TaskLog> {
+export async function createTaskLog(clientState: ClientState, taskId: string, logData: CreateTaskLogData): Promise<TaskLog> {
     return apiPost<TaskLog, CreateTaskLogData>(clientState, `tasks/${taskId}/logs`, logData);
 }
 
-export async function getTaskLogCount(clientState: LoadedClientState, taskId: string): Promise<{ count: number }> {
+export async function getTaskLogCount(clientState: ClientState, taskId: string): Promise<{ count: number }> {
     return apiGet<{ count: number }>(clientState, `tasks/${taskId}/logs/count`);
 }
 
-export async function deleteTaskLogs(clientState: LoadedClientState, taskId: string): Promise<void> {
+export async function deleteTaskLogs(clientState: ClientState, taskId: string): Promise<void> {
     return apiDelete(clientState, `tasks/${taskId}/logs`);
 }

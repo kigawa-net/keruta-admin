@@ -1,4 +1,4 @@
-import {LoadedClientState} from "~/components/Client";
+import {LoadedClientState, ClientState} from "~/components/Client";
 
 /**
  * Default fetch options for API requests
@@ -18,9 +18,13 @@ export const defaultFetchOptions: RequestInit = {
  * @param options Additional fetch options to include
  * @returns Fetch options with authentication headers if available
  */
-export function createFetchOptions(client: LoadedClientState, options: RequestInit = {}): RequestInit {
+export function createFetchOptions(client: ClientState, options: RequestInit = {}): RequestInit {
+    // Type guard: if loading state, return default options
+    if (client.state === "loading") {
+        return {...defaultFetchOptions, ...options};
+    }
 
-    if (client.state == "unauthorized") {
+    if (client.state === "unauthorized") {
         return {...defaultFetchOptions, ...options};
     }
 

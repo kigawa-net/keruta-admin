@@ -7,7 +7,6 @@ import { useClient } from "~/components/Client";
 import { CoderTemplate, SessionTemplateConfig } from "~/types";
 import SessionBasicInfo from "~/components/sessions/SessionBasicInfo";
 import TagManager from "~/components/sessions/TagManager";
-import MetadataManager from "~/components/sessions/MetadataManager";
 import TemplateSelector from "~/components/sessions/TemplateSelector";
 
 export const meta: MetaFunction = () => {
@@ -23,7 +22,6 @@ export default function NewSession() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
-  const [metadata, setMetadata] = useState<Record<string, string>>({});
 
   // Template state
   const [templates, setTemplates] = useState<CoderTemplate[]>([]);
@@ -111,7 +109,7 @@ export default function NewSession() {
       description: (formData.get("description") as string) || undefined,
       status: formData.get("status") as string || "ACTIVE",
       tags: tags,
-      metadata: metadata,
+      repositoryRef: "main",
       templateConfig: selectedTemplateId ? templateConfig : undefined,
     };
 
@@ -135,7 +133,6 @@ export default function NewSession() {
 
         <SessionBasicInfo onSubmit={handleSubmit} loading={loading} error={error}>
           <TagManager tags={tags} onTagsChange={setTags} />
-          <MetadataManager metadata={metadata} onMetadataChange={setMetadata} />
           <TemplateSelector
             templates={templates}
             templateLoading={templateLoading}
