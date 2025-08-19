@@ -104,11 +104,11 @@ export default function TaskDetails() {
 
     try {
       setLogsLoading(true);
-      
+
       const filters = logFilter ? { level: logFilter } : undefined;
       const logsData = await getTaskLogs(clientState, taskId, filters);
       const countData = await getTaskLogCount(clientState, taskId);
-      
+
       setLogs(logsData);
       setLogCount(countData.count);
       setLogsError(null);
@@ -212,12 +212,12 @@ export default function TaskDetails() {
                         <th scope="row">進行状況</th>
                         <td>
                           <div className="progress">
-                            <div 
-                              className="progress-bar" 
-                              role="progressbar" 
+                            <div
+                              className="progress-bar"
+                              role="progressbar"
                               style={{width: `${task.progress}%`}}
-                              aria-valuenow={task.progress} 
-                              aria-valuemin={0} 
+                              aria-valuenow={task.progress}
+                              aria-valuemin={0}
                               aria-valuemax={100}
                             >
                               {task.progress}%
@@ -255,7 +255,7 @@ export default function TaskDetails() {
                       <tr>
                         <th scope="row">パラメータ</th>
                         <td>
-                          {Object.keys(task.parameters).length > 0 
+                          {Object.keys(task.parameters).length > 0
                             ? Object.keys(task.parameters).length + "個"
                             : "-"
                           }
@@ -311,7 +311,7 @@ export default function TaskDetails() {
               <div className="mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h6 className="mb-0">
-                    実行ログ 
+                    実行ログ
                     {logCount > 0 && <span className="badge bg-primary ms-2">{logCount}件</span>}
                   </h6>
                   <button
