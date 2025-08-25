@@ -388,8 +388,8 @@ export default function TaskDetails() {
 
                     {!logsLoading && !logsError && logs.length > 0 && (
                       <div className="bg-dark text-light p-3 rounded" style={{ maxHeight: "400px", overflow: "auto" }}>
-                        {logs.map((log) => (
-                          <div key={log.id} className="mb-1">
+                        {logs.map((log, index) => (
+                          <div key={`${log.id}-${index}`} className="mb-1">
                             <span className="text-muted me-2">
                               {formatDate(log.timestamp)}
                             </span>
