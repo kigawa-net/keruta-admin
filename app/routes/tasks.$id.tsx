@@ -242,7 +242,15 @@ export default function TaskDetails() {
                     <tbody>
                       <tr>
                         <th scope="row">セッションID</th>
-                        <td>{task.sessionId}</td>
+                        <td>
+                          <button
+                            className="btn btn-link p-0 text-start"
+                            onClick={() => navigate(`/sessions/${task.sessionId}`)}
+                            title="セッション詳細を表示"
+                          >
+                            {task.sessionId}
+                          </button>
+                        </td>
                       </tr>
                       <tr>
                         <th scope="row">メッセージ</th>

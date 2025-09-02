@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { getWorkspaces, deleteWorkspace, startWorkspace, stopWorkspace } from "~/utils/api";
+import { getWorkspaces, deleteWorkspace, startWorkspace, stopWorkspace, getSessions } from "~/utils/api";
 import { useClient } from "~/components/Client";
 import type { Workspace } from "~/types";
 
@@ -16,27 +16,42 @@ export const meta: MetaFunction = () => {
 export default function WorkspacesIndex() {
   const clientState = useClient();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [sessions, setSessions] = useState<Record<string, { id: string; name: string }>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadWorkspaces = async () => {
+    const loadData = async () => {
       if (clientState.state !== "authorized") return;
 
       try {
         setLoading(true);
-        const data = await getWorkspaces(clientState);
-        setWorkspaces(data);
+        
+        // Load workspaces and sessions concurrently
+        const [workspacesData, sessionsData] = await Promise.all([
+          getWorkspaces(clientState),
+          getSessions(clientState)
+        ]);
+        
+        setWorkspaces(workspacesData);
+        
+        // Create sessions lookup map
+        const sessionsMap = sessionsData.reduce((acc, session) => {
+          acc[session.id] = { id: session.id, name: session.name };
+          return acc;
+        }, {} as Record<string, { id: string; name: string }>);
+        setSessions(sessionsMap);
+        
       } catch (err) {
-        console.error("Failed to load workspaces:", err);
-        setError(err instanceof Error ? err.message : "ワークスペースの読み込みに失敗しました。");
+        console.error("Failed to load data:", err);
+        setError(err instanceof Error ? err.message : "データの読み込みに失敗しました。");
       } finally {
         setLoading(false);
       }
     };
 
-    loadWorkspaces();
+    loadData();
   }, [clientState]);
 
   const handleStartWorkspace = async (workspaceId: string) => {
@@ -201,7 +216,7 @@ export default function WorkspacesIndex() {
                     <thead>
                       <tr>
                         <th>名前</th>
-                        <th>セッションID</th>
+                        <th>セッション</th>
                         <th>ステータス</th>
                         <th>作成日時</th>
                         <th>最終更新</th>
@@ -220,13 +235,15 @@ export default function WorkspacesIndex() {
                             </Link>
                           </td>
                           <td>
-                            {workspace.sessionId ? (
+                            {workspace.sessionId && sessions[workspace.sessionId] ? (
                               <Link
                                 to={`/sessions/${workspace.sessionId}`}
-                                className="text-decoration-none text-muted"
+                                className="text-decoration-none fw-medium"
                               >
-                                {workspace.sessionId.substring(0, 8)}...
+                                {sessions[workspace.sessionId].name}
                               </Link>
+                            ) : workspace.sessionId ? (
+                              <span className="text-muted">セッションID: {workspace.sessionId.substring(0, 8)}...</span>
                             ) : (
                               <span className="text-muted">未設定</span>
                             )}

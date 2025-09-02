@@ -60,7 +60,7 @@ export default function SessionBasicInfo({ onSubmit, loading, error, children }:
             </div>
           )}
 
-          <div className="d-flex justify-content-between">
+          <div className="d-flex flex-column flex-sm-row justify-content-between gap-2">
             <button
               type="button"
               className="btn btn-secondary"

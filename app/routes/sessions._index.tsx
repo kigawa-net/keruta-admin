@@ -179,11 +179,17 @@ export default function Sessions() {
             <div className="sessions">
                 <h2>セッション管理</h2>
 
-                <div className="d-flex justify-content-between mb-3">
-                    <div>
-                        <button className="btn btn-primary me-2" onClick={() => window.location.href = "/sessions/new"}>新規セッション作成</button>
-                        <button className="btn btn-outline-secondary me-2" onClick={handleRefresh}>更新</button>
-                        <button className="btn btn-outline-warning" onClick={handleSyncAllSessions}>全同期</button>
+                <div className="d-flex flex-column flex-md-row justify-content-between mb-3 gap-3">
+                    <div className="d-flex flex-wrap gap-2">
+                        <button className="btn btn-primary" onClick={() => window.location.href = "/sessions/new"}>
+                            <span className="d-none d-sm-inline">新規セッション作成</span>
+                            <span className="d-sm-none">新規作成</span>
+                        </button>
+                        <button className="btn btn-outline-secondary" onClick={handleRefresh}>更新</button>
+                        <button className="btn btn-outline-warning" onClick={handleSyncAllSessions}>
+                            <span className="d-none d-sm-inline">全同期</span>
+                            <span className="d-sm-none">同期</span>
+                        </button>
                     </div>
                     <div className="d-flex">
                         <input
@@ -223,114 +229,217 @@ export default function Sessions() {
                         )}
 
                         {!loading && !error && sessions.length > 0 && (
-                            <div className="table-responsive">
-                                <table className="table table-striped table-hover">
-                                    <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>名前</th>
-                                        <th>説明</th>
-                                        <th>ステータス</th>
-                                        <th>Terraformテンプレート</th>
-                                        <th>タグ</th>
-                                        <th>作成日時</th>
-                                        <th>更新日時</th>
-                                        <th>操作</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {sessions.map((session) => (
-                                        <tr key={session.id}>
-                                            <td>{session.id}</td>
-                                            <td>{session.name}</td>
-                                            <td>{session.description || "なし"}</td>
-                                            <td>
-                          <span className={`badge ${getStatusBadgeClass(session.status)}`}>
-                            {session.status}
-                          </span>
-                                            </td>
-                                            <td>
-                                                {session.terraformTemplateConfig ? (
-                                                    <div className="small">
-                                                        <span className="badge bg-success text-white me-1">
-                                                            Terraform有効
-                                                        </span>
-                                                        {session.terraformTemplateConfig.claudeCodeConfig?.enabled && (
+                            <>
+                                {/* Desktop Table View */}
+                                <div className="table-responsive d-none d-lg-block">
+                                    <table className="table table-striped table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th>名前</th>
+                                            <th>説明</th>
+                                            <th>ステータス</th>
+                                            <th>Terraformテンプレート</th>
+                                            <th>タグ</th>
+                                            <th>作成日時</th>
+                                            <th>更新日時</th>
+                                            <th>操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {sessions.map((session) => (
+                                            <tr key={session.id}>
+                                                <td><strong>{session.name}</strong></td>
+                                                <td>{session.description || "なし"}</td>
+                                                <td>
+                              <span className={`badge ${getStatusBadgeClass(session.status)}`}>
+                                {session.status}
+                              </span>
+                                                </td>
+                                                <td>
+                                                    {session.terraformTemplateConfig ? (
+                                                        <div className="small">
+                                                            <span className="badge bg-success text-white me-1">
+                                                                Terraform有効
+                                                            </span>
+                                                            {session.terraformTemplateConfig.claudeCodeConfig?.enabled && (
+                                                                <span className="badge bg-primary text-white me-1">
+                                                                    Claude Code
+                                                                </span>
+                                                            )}
+                                                            {session.terraformTemplateConfig.storageClassName && (
+                                                                <span className="badge bg-info text-dark me-1">
+                                                                    {session.terraformTemplateConfig.storageClassName}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="small">
+                                                            <span className="badge bg-success text-white me-1">
+                                                                Terraform有効
+                                                            </span>
                                                             <span className="badge bg-primary text-white me-1">
                                                                 Claude Code
                                                             </span>
-                                                        )}
-                                                        {session.terraformTemplateConfig.storageClassName && (
-                                                            <span className="badge bg-info text-dark me-1">
-                                                                {session.terraformTemplateConfig.storageClassName}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {session.tags.length > 0 ? (
+                                                        session.tags.map((tag, index) => (
+                                                            <span key={index} className="badge bg-light text-dark me-1">
+                                                                {tag}
                                                             </span>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div className="small">
-                                                        <span className="badge bg-success text-white me-1">
-                                                            Terraform有効
-                                                        </span>
-                                                        <span className="badge bg-primary text-white me-1">
-                                                            Claude Code
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td>
-                                                {session.tags.length > 0 ? (
-                                                    session.tags.map((tag, index) => (
-                                                        <span key={index} className="badge bg-light text-dark me-1">
-                                                            {tag}
-                                                        </span>
-                                                    ))
-                                                ) : (
-                                                    <span className="text-muted">なし</span>
-                                                )}
-                                            </td>
-                                            <td>{formatDate(session.createdAt)}</td>
-                                            <td>{formatDate(session.updatedAt)}</td>
-                                            <td>
-                                                <button
-                                                    className="btn btn-sm btn-outline-primary me-1"
-                                                    onClick={() => handleDetails(session.id)}
-                                                >
-                                                    詳細
-                                                </button>
-                                                <button
-                                                    className="btn btn-sm btn-outline-secondary me-1"
-                                                    onClick={() => handleEdit(session.id)}
-                                                >
-                                                    編集
-                                                </button>
-                                                <button
-                                                    className="btn btn-sm btn-outline-warning me-1"
-                                                    onClick={() => handleSyncSession(session.id, session.name)}
-                                                    title="Coderワークスペースとの状態を同期"
-                                                >
-                                                    同期
-                                                </button>
-                                                {session.terraformTemplateConfig?.templatePath && (
+                                                        ))
+                                                    ) : (
+                                                        <span className="text-muted">なし</span>
+                                                    )}
+                                                </td>
+                                                <td>{formatDate(session.createdAt)}</td>
+                                                <td>{formatDate(session.updatedAt)}</td>
+                                                <td>
                                                     <button
-                                                        className="btn btn-sm btn-outline-info me-1"
-                                                        onClick={() => window.location.href = `/sessions/edit/${session.id}#template-editor`}
-                                                        title="main.tf編集"
+                                                        className="btn btn-sm btn-outline-primary me-1"
+                                                        onClick={() => handleDetails(session.id)}
                                                     >
-                                                        <i className="bi bi-file-code"></i>
+                                                        詳細
                                                     </button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-secondary me-1"
+                                                        onClick={() => handleEdit(session.id)}
+                                                    >
+                                                        編集
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-warning me-1"
+                                                        onClick={() => handleSyncSession(session.id, session.name)}
+                                                        title="Coderワークスペースとの状態を同期"
+                                                    >
+                                                        同期
+                                                    </button>
+                                                    {session.terraformTemplateConfig?.templatePath && (
+                                                        <button
+                                                            className="btn btn-sm btn-outline-info me-1"
+                                                            onClick={() => window.location.href = `/sessions/edit/${session.id}#template-editor`}
+                                                            title="main.tf編集"
+                                                        >
+                                                            <i className="bi bi-file-code"></i>
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => handleDelete(session.id, session.name)}
+                                                    >
+                                                        削除
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Mobile Card View */}
+                                <div className="d-lg-none">
+                                    {sessions.map((session) => (
+                                        <div key={session.id} className="card mb-3">
+                                            <div className="card-body">
+                                                <div className="d-flex justify-content-between align-items-start mb-2">
+                                                    <h6 className="card-title mb-0">{session.name}</h6>
+                                                    <span className={`badge ${getStatusBadgeClass(session.status)}`}>
+                                                        {session.status}
+                                                    </span>
+                                                </div>
+                                                
+                                                
+                                                {session.description && (
+                                                    <p className="card-text mb-2">{session.description}</p>
                                                 )}
-                                                <button
-                                                    className="btn btn-sm btn-outline-danger"
-                                                    onClick={() => handleDelete(session.id, session.name)}
-                                                >
-                                                    削除
-                                                </button>
-                                            </td>
-                                        </tr>
+
+                                                {session.tags.length > 0 && (
+                                                    <div className="mb-2">
+                                                        {session.tags.map((tag, index) => (
+                                                            <span key={index} className="badge bg-light text-dark me-1">
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                <div className="mb-2">
+                                                    {session.terraformTemplateConfig ? (
+                                                        <>
+                                                            <span className="badge bg-success text-white me-1">
+                                                                Terraform有効
+                                                            </span>
+                                                            {session.terraformTemplateConfig.claudeCodeConfig?.enabled && (
+                                                                <span className="badge bg-primary text-white me-1">
+                                                                    Claude Code
+                                                                </span>
+                                                            )}
+                                                            {session.terraformTemplateConfig.storageClassName && (
+                                                                <span className="badge bg-info text-dark me-1">
+                                                                    {session.terraformTemplateConfig.storageClassName}
+                                                                </span>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="badge bg-success text-white me-1">
+                                                                Terraform有効
+                                                            </span>
+                                                            <span className="badge bg-primary text-white me-1">
+                                                                Claude Code
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+
+                                                <div className="text-muted small mb-3">
+                                                    <div>作成: {formatDate(session.createdAt)}</div>
+                                                    <div>更新: {formatDate(session.updatedAt)}</div>
+                                                </div>
+
+                                                <div className="d-flex flex-wrap gap-1">
+                                                    <button
+                                                        className="btn btn-sm btn-outline-primary"
+                                                        onClick={() => handleDetails(session.id)}
+                                                    >
+                                                        詳細
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        onClick={() => handleEdit(session.id)}
+                                                    >
+                                                        編集
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-warning"
+                                                        onClick={() => handleSyncSession(session.id, session.name)}
+                                                        title="Coderワークスペースとの状態を同期"
+                                                    >
+                                                        同期
+                                                    </button>
+                                                    {session.terraformTemplateConfig?.templatePath && (
+                                                        <button
+                                                            className="btn btn-sm btn-outline-info"
+                                                            onClick={() => window.location.href = `/sessions/edit/${session.id}#template-editor`}
+                                                            title="main.tf編集"
+                                                        >
+                                                            <i className="bi bi-file-code"></i>
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => handleDelete(session.id, session.name)}
+                                                    >
+                                                        削除
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                </div>
+                            </>
                         )}
 
                         <nav aria-label="セッション一覧ページネーション">

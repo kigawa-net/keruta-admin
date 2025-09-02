@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
+import SessionLogs from "~/components/sessions/SessionLogs";
 import { getSession, deleteSession, apiGet, createTask, getWorkspaces, startWorkspace, stopWorkspace } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
 import { Session, Workspace } from "~/types";
@@ -569,7 +570,7 @@ export default function SessionDetails() {
         </div>
 
         {/* 関連タスク */}
-        <div className="card">
+        <div className="card mb-4">
           <div className="card-header d-flex justify-content-between align-items-center">
             <h5 className="card-title">関連タスク</h5>
             <div>
@@ -716,6 +717,16 @@ export default function SessionDetails() {
             ) : (
               <p className="text-muted">このセッションに関連するタスクはありません。</p>
             )}
+          </div>
+        </div>
+
+        {/* セッションログ */}
+        <div className="card">
+          <div className="card-header">
+            <h5 className="card-title">セッションログ</h5>
+          </div>
+          <div className="card-body">
+            <SessionLogs sessionId={session.id} />
           </div>
         </div>
       </div>

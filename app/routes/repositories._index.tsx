@@ -39,7 +39,6 @@ export default function Repositories() {
               <table className="table table-striped table-hover">
                 <thead>
                   <tr>
-                    <th>ID</th>
                     <th>名前</th>
                     <th>URL</th>
                     <th>ブランチ</th>
@@ -49,8 +48,7 @@ export default function Repositories() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>1</td>
-                    <td>サンプルリポジトリ1</td>
+                    <td><strong>サンプルリポジトリ1</strong></td>
                     <td>https://github.com/example/repo1.git</td>
                     <td>main</td>
                     <td>SSH</td>
@@ -62,8 +60,7 @@ export default function Repositories() {
                     </td>
                   </tr>
                   <tr>
-                    <td>2</td>
-                    <td>サンプルリポジトリ2</td>
+                    <td><strong>サンプルリポジトリ2</strong></td>
                     <td>https://github.com/example/repo2.git</td>
                     <td>develop</td>
                     <td>ユーザー名/パスワード</td>

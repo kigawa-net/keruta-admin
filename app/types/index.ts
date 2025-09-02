@@ -175,3 +175,27 @@ export interface CreateTaskLogData {
   metadata?: Record<string, any>;
 }
 
+// Session Log Types
+export interface SessionLog {
+  id: string;
+  sessionId: string;
+  level: 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
+  source: string;
+  action: string;
+  message: string;
+  details?: string | null;
+  metadata: Record<string, any>;
+  userId?: string | null;
+  timestamp: string;
+}
+
+export interface CreateSessionLogData {
+  level: string;
+  source: string;
+  action: string;
+  message: string;
+  details?: string;
+  metadata?: Record<string, any>;
+  userId?: string;
+}
+

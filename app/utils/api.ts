@@ -7,7 +7,7 @@
 
 import {ClientState} from "~/components/Client";
 import {createFetchOptions} from "~/utils/apiConfig";
-import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, UpdateWorkspaceData, WorkspaceTemplate, Task, TaskLog, CreateTaskLogData} from "~/types";
+import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, UpdateWorkspaceData, WorkspaceTemplate, Task, TaskLog, CreateTaskLogData, SessionLog, CreateSessionLogData} from "~/types";
 
 /**
  * Generic API error class
@@ -313,4 +313,107 @@ export async function getTaskLogCount(clientState: ClientState, taskId: string):
 
 export async function deleteTaskLogs(clientState: ClientState, taskId: string): Promise<void> {
     return apiDelete(clientState, `tasks/${taskId}/logs`);
+}
+
+// Session Log API Functions
+export async function getSessionLogs(
+    clientState: ClientState, 
+    sessionId: string,
+    filters?: {
+        level?: string;
+        source?: string;
+        action?: string;
+        startTime?: string;
+        endTime?: string;
+        limit?: number;
+        offset?: number;
+    }
+): Promise<SessionLog[]> {
+    let endpoint = `sessions/${sessionId}/logs`;
+    const params = new URLSearchParams();
+    
+    if (filters?.level) {
+        params.append('level', filters.level);
+    }
+    if (filters?.source) {
+        params.append('source', filters.source);
+    }
+    if (filters?.action) {
+        params.append('action', filters.action);
+    }
+    if (filters?.startTime) {
+        params.append('startTime', filters.startTime);
+    }
+    if (filters?.endTime) {
+        params.append('endTime', filters.endTime);
+    }
+    if (filters?.limit) {
+        params.append('limit', filters.limit.toString());
+    }
+    if (filters?.offset) {
+        params.append('offset', filters.offset.toString());
+    }
+    
+    if (params.toString()) {
+        endpoint += `?${params.toString()}`;
+    }
+    
+    return apiGet<SessionLog[]>(clientState, endpoint);
+}
+
+export async function getSessionLog(clientState: ClientState, sessionId: string, logId: string): Promise<SessionLog> {
+    return apiGet<SessionLog>(clientState, `sessions/${sessionId}/logs/${logId}`);
+}
+
+export async function createSessionLog(clientState: ClientState, sessionId: string, logData: CreateSessionLogData): Promise<SessionLog> {
+    return apiPost<SessionLog, CreateSessionLogData>(clientState, `sessions/${sessionId}/logs`, logData);
+}
+
+export async function getSessionLogCount(
+    clientState: ClientState, 
+    sessionId: string,
+    filters?: {
+        level?: string;
+        source?: string;
+        action?: string;
+        startTime?: string;
+        endTime?: string;
+    }
+): Promise<{ count: number }> {
+    let endpoint = `sessions/${sessionId}/logs/count`;
+    const params = new URLSearchParams();
+    
+    if (filters?.level) {
+        params.append('level', filters.level);
+    }
+    if (filters?.source) {
+        params.append('source', filters.source);
+    }
+    if (filters?.action) {
+        params.append('action', filters.action);
+    }
+    if (filters?.startTime) {
+        params.append('startTime', filters.startTime);
+    }
+    if (filters?.endTime) {
+        params.append('endTime', filters.endTime);
+    }
+    
+    if (params.toString()) {
+        endpoint += `?${params.toString()}`;
+    }
+    
+    return apiGet<{ count: number }>(clientState, endpoint);
+}
+
+export async function deleteSessionLogs(clientState: ClientState, sessionId: string): Promise<void> {
+    return apiDelete(clientState, `sessions/${sessionId}/logs`);
+}
+
+export async function getRecentSessionLogs(clientState: ClientState, limit: number = 100): Promise<SessionLog[]> {
+    return apiGet<SessionLog[]>(clientState, `sessions/logs/recent?limit=${limit}`);
+}
+
+export async function getSessionLogsByLevel(clientState: ClientState, level: string, limit: number = 100): Promise<SessionLog[]> {
+    return apiGet<SessionLog[]>(clientState, `sessions/logs/level/${level}?limit=${limit}`);
 }

@@ -3,11 +3,13 @@ import {Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useLoaderDa
 
 // Import Bootstrap CSS
 import bootstrapStyles from "bootstrap/dist/css/bootstrap.min.css";
+import mobileStyles from "~/styles/mobile.css";
 
 import {ClientProvider, loadClientState, LoadedClientState} from "~/components/Client";
 
 export const links: LinksFunction = () => [
     {rel: "stylesheet", href: bootstrapStyles},
+    {rel: "stylesheet", href: mobileStyles},
 ];
 
 // Main App component

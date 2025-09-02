@@ -202,7 +202,6 @@ export default function Tasks() {
                                 <table className="table table-striped table-hover">
                                     <thead>
                                     <tr>
-                                        <th>ID</th>
                                         <th>名前</th>
                                         <th>セッション</th>
                                         <th>ステータス</th>
@@ -214,8 +213,7 @@ export default function Tasks() {
                                     <tbody>
                                     {tasks.map((task) => (
                                         <tr key={task.id}>
-                                            <td>{task.id}</td>
-                                            <td>{task.title}</td>
+                                            <td><strong>{task.title}</strong></td>
                                             <td>
                                                 {sessions[task.session] ? (
                                                     <span className="badge bg-info text-dark">

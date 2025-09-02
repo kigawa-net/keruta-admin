@@ -15,31 +15,55 @@ export default function Index() {
         <h2>ダッシュボード</h2>
         
         <div className="row mt-4">
-          <div className="col-md-6">
-            <div className="card mb-4">
+          <div className="col-lg-6 mb-4">
+            <div className="card h-100">
               <div className="card-header">
                 <h5 className="card-title">最近のタスク</h5>
               </div>
-              <div className="card-body">
-                <p>最近のタスク情報がここに表示されます。</p>
+              <div className="card-body d-flex flex-column">
+                <p className="flex-grow-1">最近のタスク情報がここに表示されます。</p>
                 <a href="/tasks" className="btn btn-primary">タスク一覧へ</a>
               </div>
             </div>
           </div>
           
-          <div className="col-md-6">
-            <div className="card mb-4">
+          <div className="col-lg-6 mb-4">
+            <div className="card h-100">
               <div className="card-header">
                 <h5 className="card-title">クイックリンク</h5>
               </div>
               <div className="card-body">
-                <div className="list-group">
-                  <a href="/tasks" className="list-group-item list-group-item-action">タスク管理</a>
-                  <a href="/documents" className="list-group-item list-group-item-action">ドキュメント管理</a>
-                  <a href="/repositories" className="list-group-item list-group-item-action">リポジトリ管理</a>
-                  <a href="/templates" className="list-group-item list-group-item-action">テンプレート管理</a>
-                  <a href="/kubernetes" className="list-group-item list-group-item-action">Kubernetes設定</a>
-                  <a href="/agents" className="list-group-item list-group-item-action">エージェント管理</a>
+                <div className="row g-2">
+                  <div className="col-6 col-sm-4 col-lg-6">
+                    <a href="/tasks" className="btn btn-outline-primary w-100 py-3">
+                      <div>タスク管理</div>
+                    </a>
+                  </div>
+                  <div className="col-6 col-sm-4 col-lg-6">
+                    <a href="/sessions" className="btn btn-outline-primary w-100 py-3">
+                      <div>セッション管理</div>
+                    </a>
+                  </div>
+                  <div className="col-6 col-sm-4 col-lg-6">
+                    <a href="/documents" className="btn btn-outline-primary w-100 py-3">
+                      <div>ドキュメント管理</div>
+                    </a>
+                  </div>
+                  <div className="col-6 col-sm-4 col-lg-6">
+                    <a href="/repositories" className="btn btn-outline-primary w-100 py-3">
+                      <div>リポジトリ管理</div>
+                    </a>
+                  </div>
+                  <div className="col-6 col-sm-4 col-lg-6">
+                    <a href="/templates" className="btn btn-outline-primary w-100 py-3">
+                      <div>テンプレート管理</div>
+                    </a>
+                  </div>
+                  <div className="col-6 col-sm-4 col-lg-6">
+                    <a href="/kubernetes" className="btn btn-outline-primary w-100 py-3">
+                      <div>Kubernetes設定</div>
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>

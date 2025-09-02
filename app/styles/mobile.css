@@ -1,0 +1,110 @@
+/* Mobile-specific styles for keruta admin panel */
+
+/* Ensure proper touch targets on mobile */
+@media (max-width: 767.98px) {
+  /* Minimum touch target size */
+  .btn, .nav-link, .form-control, .form-select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve button spacing on mobile */
+  .btn-group-mobile .btn {
+    margin-bottom: 0.25rem;
+    margin-right: 0.25rem;
+  }
+
+  /* Better table scroll on mobile */
+  .table-responsive {
+    border: none;
+  }
+
+  /* Improve form inputs on mobile */
+  .form-control, .form-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem;
+  }
+
+  /* Mobile sidebar */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: 1050;
+    padding-top: 80px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar.d-block {
+    transform: translateX(0);
+  }
+
+  /* Adjust main content for mobile header */
+  main.col-md-9 {
+    width: 100%;
+    margin-left: 0;
+    padding-top: 0;
+  }
+
+  /* Mobile header improvements */
+  .mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+  }
+
+  /* Card improvements for mobile */
+  .card-body {
+    padding: 1rem;
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+  }
+
+  /* Better spacing for mobile cards */
+  .mobile-session-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Pagination improvements */
+  .pagination .page-link {
+    padding: 0.75rem;
+    min-width: 44px;
+    text-align: center;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .sidebar {
+    width: 240px;
+  }
+}
+
+/* General mobile improvements */
+.mobile-friendly-buttons .btn-sm {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Loading spinner centering */
+.spinner-container {
+  min-height: 200px;
+}
+
+/* Better badge wrapping */
+.badge-container {
+  line-height: 2;
+}
+
+.badge-container .badge {
+  margin: 0.125rem;
+}
