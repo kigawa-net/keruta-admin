@@ -265,6 +265,10 @@ export async function getTask(clientState: ClientState, taskId: string): Promise
     return apiGet<Task>(clientState, `tasks/${taskId}`);
 }
 
+export async function createTask(clientState: ClientState, taskData: {sessionId: string, name: string, description?: string, script?: string}): Promise<Task> {
+    return apiPost<Task, {sessionId: string, name: string, description?: string, script?: string}>(clientState, "tasks", taskData);
+}
+
 export async function deleteTask(clientState: ClientState, taskId: string): Promise<void> {
     return apiDelete(clientState, `tasks/${taskId}`);
 }

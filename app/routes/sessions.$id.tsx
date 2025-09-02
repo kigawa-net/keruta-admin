@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { getSession, deleteSession, apiGet, apiPost, getWorkspaces, startWorkspace, stopWorkspace } from "~/utils/api";
+import { getSession, deleteSession, apiGet, createTask, getWorkspaces, startWorkspace, stopWorkspace } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
 import { Session, Workspace } from "~/types";
 
@@ -207,7 +207,7 @@ export default function SessionDetails() {
 
     try {
       setTaskCreating(true);
-      await apiPost(clientState, "tasks", {
+      await createTask(clientState, {
         sessionId: id,
         name: taskFormData.name,
         description: taskFormData.description,
@@ -591,6 +591,83 @@ export default function SessionDetails() {
             </div>
           </div>
           <div className="card-body">
+            {/* タスク作成フォーム */}
+            {showTaskForm && (
+              <div className="border rounded p-3 mb-3 bg-light">
+                <h6 className="mb-3">新しいタスクを作成</h6>
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label htmlFor="taskName" className="form-label">タスク名 <span className="text-danger">*</span></label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="taskName"
+                        value={taskFormData.name}
+                        onChange={(e) => setTaskFormData({...taskFormData, name: e.target.value})}
+                        placeholder="タスク名を入力してください"
+                        disabled={taskCreating}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="taskDescription" className="form-label">説明</label>
+                      <textarea
+                        className="form-control"
+                        id="taskDescription"
+                        rows={3}
+                        value={taskFormData.description}
+                        onChange={(e) => setTaskFormData({...taskFormData, description: e.target.value})}
+                        placeholder="タスクの説明を入力してください"
+                        disabled={taskCreating}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label htmlFor="taskScript" className="form-label">スクリプト</label>
+                      <textarea
+                        className="form-control"
+                        id="taskScript"
+                        rows={6}
+                        value={taskFormData.script}
+                        onChange={(e) => setTaskFormData({...taskFormData, script: e.target.value})}
+                        placeholder="実行するスクリプトを入力してください"
+                        disabled={taskCreating}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="d-flex justify-content-end">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary me-2"
+                    onClick={handleCancelTaskForm}
+                    disabled={taskCreating}
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleCreateTask}
+                    disabled={taskCreating || !taskFormData.name.trim()}
+                  >
+                    {taskCreating ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        作成中...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-check-circle me-1"></i>
+                        作成
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {tasksLoading ? (
               <div className="text-center">
                 <div className="spinner-border spinner-border-sm text-primary" role="status">
