@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { getSession, deleteSession, apiGet, getWorkspaces, startWorkspace, stopWorkspace } from "~/utils/api";
+import { getSession, deleteSession, apiGet, apiPost, getWorkspaces, startWorkspace, stopWorkspace } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
 import { Session, Workspace } from "~/types";
 
@@ -71,6 +71,15 @@ export default function SessionDetails() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [workspacesLoading, setWorkspacesLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  
+  // タスク作成フォーム関連の状態
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [taskFormData, setTaskFormData] = useState({
+    name: "",
+    description: "",
+    script: ""
+  });
+  const [taskCreating, setTaskCreating] = useState(false);
 
   // セッション情報を取得
   const fetchSession = async (clientState: ClientState) => {
@@ -184,6 +193,53 @@ export default function SessionDetails() {
         setError("セッションの削除に失敗しました。");
       }
     }
+  };
+
+  // タスク作成ハンドラ
+  const handleCreateTask = async () => {
+    if (clientState.state === "loading" || !id || taskCreating) return;
+
+    // フォームバリデーション
+    if (!taskFormData.name.trim()) {
+      alert("タスク名を入力してください。");
+      return;
+    }
+
+    try {
+      setTaskCreating(true);
+      await apiPost(clientState, "tasks", {
+        sessionId: id,
+        name: taskFormData.name,
+        description: taskFormData.description,
+        script: taskFormData.script
+      });
+
+      // フォームをリセット
+      setTaskFormData({
+        name: "",
+        description: "",
+        script: ""
+      });
+      setShowTaskForm(false);
+
+      // タスク一覧を再取得
+      await fetchSessionTasks(clientState);
+    } catch (err) {
+      console.error("タスクの作成に失敗しました:", err);
+      setError("タスクの作成に失敗しました。");
+    } finally {
+      setTaskCreating(false);
+    }
+  };
+
+  // タスク作成フォームのキャンセルハンドラ
+  const handleCancelTaskForm = () => {
+    setTaskFormData({
+      name: "",
+      description: "",
+      script: ""
+    });
+    setShowTaskForm(false);
   };
 
   if (loading) {
@@ -516,13 +572,23 @@ export default function SessionDetails() {
         <div className="card">
           <div className="card-header d-flex justify-content-between align-items-center">
             <h5 className="card-title">関連タスク</h5>
-            <button
-              className="btn btn-sm btn-outline-primary"
-              onClick={() => fetchSessionTasks(clientState)}
-              disabled={tasksLoading}
-            >
-              {tasksLoading ? "読み込み中..." : "更新"}
-            </button>
+            <div>
+              <button
+                className="btn btn-sm btn-primary me-2"
+                onClick={() => setShowTaskForm(true)}
+                disabled={tasksLoading}
+              >
+                <i className="bi bi-plus-circle me-1"></i>
+                タスク追加
+              </button>
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => fetchSessionTasks(clientState)}
+                disabled={tasksLoading}
+              >
+                {tasksLoading ? "読み込み中..." : "更新"}
+              </button>
+            </div>
           </div>
           <div className="card-body">
             {tasksLoading ? (
