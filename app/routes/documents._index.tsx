@@ -5,6 +5,7 @@ import { useState } from "react";
 import Layout from "~/components/Layout";
 import { apiGet, apiDelete } from "~/utils/api";
 import { loadClientState } from "~/components/Client";
+import { formatDate } from "~/utils/dateUtils";
 
 // Document type definition based on the backend model
 interface Document {
@@ -99,11 +100,6 @@ export default function Documents() {
     }
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ja-JP");
-  };
 
   return (
     <Layout>

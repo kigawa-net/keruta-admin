@@ -17,7 +17,7 @@ export function setupErrorDetection() {
     threshold: 3, // Alert after 3 critical errors
     timeWindow: 60000, // within 1 minute
     callback: (patternName, logs) => {
-      console.error(`🚨 ALERT: ${patternName} triggered!`);
+      console.error(`ALERT: ${patternName} triggered!`);
       console.error(`Found ${logs.length} critical errors in the last minute:`);
       logs.forEach(log => {
         console.error(`  ${log.timestamp}: ${log.message}`);
@@ -59,8 +59,6 @@ export function setupPerformanceMonitoring() {
     batchSize: 10,
     batchTimeout: 5000, // Process batch every 5 seconds
     onBatch: (logs) => {
-      console.log(`📊 Performance batch processed: ${logs.length} entries`);
-      
       // Calculate performance statistics
       const timings: number[] = [];
       logs.forEach(log => {
@@ -73,14 +71,9 @@ export function setupPerformanceMonitoring() {
 
       if (timings.length > 0) {
         const avg = timings.reduce((a, b) => a + b, 0) / timings.length;
-        const max = Math.max(...timings);
-        const min = Math.min(...timings);
-        
-        console.log(`  Average: ${avg.toFixed(2)}ms`);
-        console.log(`  Min: ${min}ms, Max: ${max}ms`);
         
         if (avg > 1000) {
-          console.warn(`⚠️  High average response time detected: ${avg.toFixed(2)}ms`);
+          console.warn(`High average response time detected: ${avg.toFixed(2)}ms`);
         }
       }
     }
@@ -94,12 +87,11 @@ export async function analyzeLogData(processId?: string) {
   // Get comprehensive statistics
   const stats = subprocessAgent.getLogStats(processId);
   
-  console.log('📈 Log Statistics:');
-  console.log(`  Total logs: ${stats.total}`);
-  console.log(`  Error rate: ${stats.errorRate.toFixed(2)}%`);
-  console.log('  By level:', stats.byLevel);
-  console.log('  By source:', stats.bySource);
-  console.log(`  Recent activity: ${stats.recentActivity.length} intervals`);
+  if (stats.total > 0) {
+    console.log('Log Statistics:');
+    console.log(`  Total logs: ${stats.total}`);
+    console.log(`  Error rate: ${stats.errorRate.toFixed(2)}%`);
+  }
 
   // Get error logs from last hour
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -113,7 +105,7 @@ export async function analyzeLogData(processId?: string) {
   });
 
   if (recentErrors.length > 0) {
-    console.log('\n🔴 Recent Errors:');
+    console.log('\nRecent Errors:');
     recentErrors.forEach(log => {
       console.log(`  ${log.timestamp}: ${log.message}`);
     });
@@ -126,11 +118,13 @@ export async function analyzeLogData(processId?: string) {
     timeRange: { start: oneHourAgo, end: now }
   });
 
-  console.log('\n📊 Hourly Log Distribution:');
-  Object.entries(hourlyLogs).forEach(([hour, logs]) => {
-    const errors = logs.filter(log => log.level === 'error').length;
-    console.log(`  ${hour}: ${logs.length} logs (${errors} errors)`);
-  });
+  if (Object.keys(hourlyLogs).length > 0) {
+    console.log('\nHourly Log Distribution:');
+    Object.entries(hourlyLogs).forEach(([hour, logs]) => {
+      const errors = logs.filter(log => log.level === 'error').length;
+      console.log(`  ${hour}: ${logs.length} logs (${errors} errors)`);
+    });
+  }
 }
 
 // Example 4: Security Monitoring
@@ -156,7 +150,7 @@ export function setupSecurityMonitoring() {
     return subprocessAgent.addLogPattern({
       ...pattern,
       callback: (patternName, logs) => {
-        console.warn(`🔒 SECURITY ALERT: ${patternName}`);
+        console.warn(`SECURITY ALERT: ${patternName}`);
         console.warn(`Detected ${logs.length} incidents:`);
         logs.forEach(log => {
           console.warn(`  [${log.source}] ${log.timestamp}: ${log.message}`);
@@ -205,18 +199,26 @@ export function setupApplicationMetrics() {
         }
       });
 
-      // Generate summary report
-      console.log('📊 Application Metrics Summary:');
-      console.log(`  Total requests processed: ${metrics.requests}`);
-      
-      if (metrics.memoryUsage.length > 0) {
-        const avgMemory = metrics.memoryUsage.reduce((a, b) => a + b, 0) / metrics.memoryUsage.length;
-        console.log(`  Average memory usage: ${avgMemory.toFixed(2)}%`);
-      }
-      
-      if (metrics.cpuUsage.length > 0) {
-        const avgCpu = metrics.cpuUsage.reduce((a, b) => a + b, 0) / metrics.cpuUsage.length;
-        console.log(`  Average CPU usage: ${avgCpu.toFixed(2)}%`);
+      // Generate summary report only for significant metrics
+      if (metrics.requests > 0 || metrics.memoryUsage.length > 0 || metrics.cpuUsage.length > 0) {
+        console.log('Application Metrics Summary:');
+        if (metrics.requests > 0) {
+          console.log(`  Total requests processed: ${metrics.requests}`);
+        }
+        
+        if (metrics.memoryUsage.length > 0) {
+          const avgMemory = metrics.memoryUsage.reduce((a, b) => a + b, 0) / metrics.memoryUsage.length;
+          if (avgMemory > 80) { // Only log high memory usage
+            console.log(`  Average memory usage: ${avgMemory.toFixed(2)}%`);
+          }
+        }
+        
+        if (metrics.cpuUsage.length > 0) {
+          const avgCpu = metrics.cpuUsage.reduce((a, b) => a + b, 0) / metrics.cpuUsage.length;
+          if (avgCpu > 70) { // Only log high CPU usage
+            console.log(`  Average CPU usage: ${avgCpu.toFixed(2)}%`);
+          }
+        }
       }
     }
   };
@@ -226,7 +228,6 @@ export function setupApplicationMetrics() {
 
 // Example 6: Complete Monitoring Setup
 export async function setupCompleteMonitoring() {
-  console.log('🚀 Setting up comprehensive subprocess monitoring...');
   
   // Set up all monitoring components
   const unsubscribeError = setupErrorDetection();
@@ -236,26 +237,21 @@ export async function setupCompleteMonitoring() {
 
   // Subscribe to real-time log stream
   const unsubscribeStream = subprocessAgent.onLogStream((log) => {
-    // You can add custom real-time processing here
-    if (log.level === 'error') {
-      console.error(`🔴 Error from ${log.processId}: ${log.message}`);
+    // Only log critical errors
+    if (log.level === 'error' && (log.message.includes('CRITICAL') || log.message.includes('FATAL'))) {
+      console.error(`Error from ${log.processId}: ${log.message}`);
     }
   });
 
   // Subscribe to process status changes
   const unsubscribeStatus = subprocessAgent.onStatusChange((status) => {
-    console.log(`📋 Process ${status.id}: ${status.status}`);
-    
     if (status.status === 'failed') {
-      console.error(`❌ Process failed: ${status.command} (exit code: ${status.exitCode})`);
-    } else if (status.status === 'completed') {
-      console.log(`✅ Process completed: ${status.command}`);
+      console.error(`Process failed: ${status.command} (exit code: ${status.exitCode})`);
     }
   });
 
   // Return cleanup function
   return () => {
-    console.log('🧹 Cleaning up monitoring...');
     unsubscribeError();
     unsubscribePerf();
     unsubscribeSecurity();

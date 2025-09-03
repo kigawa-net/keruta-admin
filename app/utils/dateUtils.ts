@@ -28,14 +28,26 @@ export function formatDate(dateString: string): string {
       return dateString; // Return original string if parsing fails
     }
     
-    return date.toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    const now = new Date();
+    const isThisYear = date.getFullYear() === now.getFullYear();
+    
+    // More readable format: show year only if different from current year
+    if (isThisYear) {
+      return date.toLocaleString("ja-JP", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } else {
+      return date.toLocaleString("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
   } catch (error) {
     console.error('Error formatting date:', dateString, error);
     return dateString; // Return original string if any error occurs
@@ -49,6 +61,39 @@ export function formatDate(dateString: string): string {
  */
 export function formatDateForAPI(date: Date): string {
   return date.toISOString();
+}
+
+/**
+ * Format a date string to show only the date part (no time)
+ * @param dateString - Date string from API (may be in various formats)
+ * @returns Formatted date string in Japanese locale showing only date
+ */
+export function formatDateOnly(dateString: string): string {
+  if (!dateString) return "-";
+  
+  try {
+    let date: Date;
+    
+    if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/.test(dateString)) {
+      date = new Date(dateString.replace(' ', 'T'));
+    } else {
+      date = new Date(dateString);
+    }
+    
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date string:', dateString);
+      return dateString;
+    }
+    
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  } catch (error) {
+    console.error('Error formatting date:', dateString, error);
+    return dateString;
+  }
 }
 
 /**

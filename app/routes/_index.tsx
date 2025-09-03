@@ -5,6 +5,7 @@ import { useClient } from "~/components/Client";
 import { useManagementSSE } from "~/hooks/useManagementSSE";
 import { apiGet } from "~/utils/api";
 import RealtimeIndicator from "~/components/RealtimeIndicator";
+import { formatDate } from "~/utils/dateUtils";
 
 export const meta: MetaFunction = () => {
   return [
@@ -107,14 +108,6 @@ export default function Index() {
     }
   }, [connected, sseError]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("ja-JP", {
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  };
 
   return (
     <Layout>

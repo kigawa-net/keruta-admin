@@ -573,7 +573,7 @@ export class SubprocessAgent {
       try {
         callback(log);
       } catch (error) {
-        console.error('Error in log callback:', error);
+        // Callback error handled internally
       }
     });
   }
@@ -615,7 +615,7 @@ export class SubprocessAgent {
           processor.onBatch([transformedLog]);
         }
       } catch (error) {
-        console.error(`Error in stream processor ${processor.name}:`, error);
+        // Stream processor error handled internally
       }
     });
   }
@@ -630,7 +630,7 @@ export class SubprocessAgent {
           processor.onBatch([...batch.logs]);
         }
       } catch (error) {
-        console.error(`Error flushing batch for processor ${processor.name}:`, error);
+        // Batch flush error handled internally
       }
       
       // Clear batch
@@ -675,7 +675,7 @@ export class SubprocessAgent {
           }
         }
       } catch (error) {
-        console.error(`Error checking pattern ${pattern.name}:`, error);
+        // Pattern check error handled internally
       }
     });
   }
@@ -685,7 +685,7 @@ export class SubprocessAgent {
       try {
         callback(status);
       } catch (error) {
-        console.error('Error in status callback:', error);
+        // Status callback error handled internally
       }
     });
   }

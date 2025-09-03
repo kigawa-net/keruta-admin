@@ -46,7 +46,6 @@ export function useSessionSSE({ clientState, sessionId, onEvent, onLogCreated }:
         setConnected(true);
         setError(null);
         reconnectAttemptsRef.current = 0;
-        console.log('SSE connection opened for session:', sessionId || 'all');
       };
 
       eventSource.onmessage = (event) => {
@@ -67,7 +66,7 @@ export function useSessionSSE({ clientState, sessionId, onEvent, onLogCreated }:
 
       // Listen for specific events
       eventSource.addEventListener('connected', (event) => {
-        console.log('SSE connected event received:', event.data);
+        // Connection confirmed
       });
 
       eventSource.addEventListener('session_log_created', (event) => {
@@ -112,7 +111,6 @@ export function useSessionSSE({ clientState, sessionId, onEvent, onLogCreated }:
         // Attempt to reconnect
         if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           reconnectAttemptsRef.current++;
-          console.log(`Attempting to reconnect SSE (attempt ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();

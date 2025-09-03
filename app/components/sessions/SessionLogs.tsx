@@ -210,6 +210,16 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
     });
   };
 
+  // Toggle auto-update pause
+  const toggleAutoUpdate = () => {
+    setAutoUpdatePaused(prev => !prev);
+  };
+
+  // Force refresh logs
+  const forceRefresh = () => {
+    fetchLogs(clientState);
+  };
+
   // Get unique values for filter dropdowns (memoized to prevent recalculation)
   const uniqueSources = useMemo(() => [...new Set(logs.map(log => log.source))], [logs]);
   const uniqueActions = useMemo(() => [...new Set(logs.map(log => log.action))], [logs]);
@@ -233,10 +243,22 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div className="d-flex align-items-center">
           <h5 className="mb-0 me-3">セッションログ ({totalCount}件)</h5>
-          {sseConnected && (
+          {sseConnected && realTimeEnabled && !autoUpdatePaused && (
             <span className="badge bg-success me-2">
               <i className="bi bi-broadcast me-1"></i>
               リアルタイム接続中
+            </span>
+          )}
+          {sseConnected && realTimeEnabled && autoUpdatePaused && (
+            <span className="badge bg-warning text-dark me-2">
+              <i className="bi bi-pause-fill me-1"></i>
+              更新一時停止中
+            </span>
+          )}
+          {!realTimeEnabled && (
+            <span className="badge bg-secondary me-2">
+              <i className="bi bi-stop-fill me-1"></i>
+              自動更新停止中
             </span>
           )}
           {sseError && (
@@ -259,12 +281,36 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
               リアルタイム更新
             </label>
           </div>
+          
+          {realTimeEnabled && (
+            <button
+              className={`btn btn-sm ${autoUpdatePaused ? 'btn-warning' : 'btn-success'}`}
+              onClick={toggleAutoUpdate}
+              title={autoUpdatePaused ? '自動更新を再開' : '自動更新を一時停止'}
+            >
+              <i className={`bi ${autoUpdatePaused ? 'bi-play-fill' : 'bi-pause-fill'} me-1`}></i>
+              {autoUpdatePaused ? '再開' : '一時停止'}
+            </button>
+          )}
+          
           <button 
             className="btn btn-sm btn-outline-primary"
-            onClick={() => fetchLogs(clientState)}
+            onClick={forceRefresh}
             disabled={loading}
+            title="ログを手動で更新"
           >
+            <i className="bi bi-arrow-clockwise me-1"></i>
             {loading ? "更新中..." : "更新"}
+          </button>
+          
+          <button
+            className="btn btn-sm btn-outline-danger"
+            onClick={() => setRealTimeEnabled(false)}
+            disabled={!realTimeEnabled}
+            title="全ての自動更新を停止"
+          >
+            <i className="bi bi-stop-fill me-1"></i>
+            停止
           </button>
         </div>
       </div>

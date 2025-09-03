@@ -669,7 +669,6 @@ export default function SessionDetails() {
                   <thead>
                     <tr>
                       <th>タイトル</th>
-                      <th>ID</th>
                       <th>ステータス</th>
                       <th>作成日時</th>
                       <th>更新日時</th>
@@ -680,7 +679,6 @@ export default function SessionDetails() {
                     {tasks.map((task) => (
                       <tr key={task.id}>
                         <td>{task.title}</td>
-                        <td>{task.id}</td>
                         <td>
                           <span className={`badge ${getStatusBadgeClass(task.status)}`}>
                             {task.status}

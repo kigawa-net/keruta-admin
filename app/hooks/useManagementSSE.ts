@@ -99,7 +99,6 @@ export function useManagementSSE({
       eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {
-        console.log('Management SSE connection opened');
         setConnected(true);
         setError(null);
         reconnectAttemptsRef.current = 0;
@@ -198,7 +197,6 @@ export function useManagementSSE({
         // Attempt to reconnect
         if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           reconnectAttemptsRef.current++;
-          console.log(`Attempting to reconnect Management SSE (attempt ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();

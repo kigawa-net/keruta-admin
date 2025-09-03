@@ -4,6 +4,7 @@ import { Link, useLoaderData } from "@remix-run/react";
 import Layout from "~/components/Layout";
 import { apiGet } from "~/utils/api";
 import { loadClientState } from "~/components/Client";
+import { formatDate } from "~/utils/dateUtils";
 
 // Document type definition based on the backend model
 interface Document {
@@ -43,11 +44,6 @@ export const meta: MetaFunction = ({ data }) => {
 export default function DocumentDetails() {
   const { document, error } = useLoaderData<{ document: Document | null, error: string | null }>();
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("ja-JP");
-  };
 
   return (
     <Layout>
