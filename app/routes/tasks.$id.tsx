@@ -70,6 +70,7 @@ export default function TaskDetails() {
   const [showLogs, setShowLogs] = useState(true);
   const [showGitFailures, setShowGitFailures] = useState(false);
   const [hasGitFailures, setHasGitFailures] = useState(false);
+  const [autoUpdateLogs, setAutoUpdateLogs] = useState(true);
 
   // タスクデータを取得
   useEffect(() => {
@@ -127,9 +128,9 @@ export default function TaskDetails() {
     }
   }, [showLogs, taskId, logFilter]);
 
-  // 常にログを自動更新
+  // ログの自動更新（autoUpdateLogsがtrueの場合のみ）
   useEffect(() => {
-    if (!taskId) return;
+    if (!taskId || !autoUpdateLogs) return;
 
     const interval = setInterval(() => {
       if (showLogs) {
@@ -138,7 +139,7 @@ export default function TaskDetails() {
     }, 2000); // 2秒間隔で更新
 
     return () => clearInterval(interval);
-  }, [taskId, showLogs, logFilter]);
+  }, [taskId, showLogs, logFilter, autoUpdateLogs]);
 
   // タスク削除のハンドラ
   const handleDelete = async () => {
@@ -422,6 +423,12 @@ export default function TaskDetails() {
                           disabled={logsLoading}
                         >
                           {logsLoading ? "更新中..." : "ログ更新"}
+                        </button>
+                        <button
+                          className={`btn btn-sm me-2 ${autoUpdateLogs ? "btn-outline-warning" : "btn-outline-success"}`}
+                          onClick={() => setAutoUpdateLogs(!autoUpdateLogs)}
+                        >
+                          {autoUpdateLogs ? "自動更新を停止" : "自動更新を開始"}
                         </button>
                         <button
                           className="btn btn-sm btn-outline-danger"
