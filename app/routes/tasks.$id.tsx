@@ -226,6 +226,18 @@ export default function TaskDetails() {
     }
   };
 
+  // キーボードショートカットのハンドラ
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.ctrlKey && event.key === 'Enter') {
+      event.preventDefault();
+      const form = event.currentTarget.closest('form');
+      if (form) {
+        const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+        form.dispatchEvent(submitEvent);
+      }
+    }
+  };
+
   return (
     <Layout>
       <div className="task-details">
@@ -439,6 +451,7 @@ export default function TaskDetails() {
                             id="subtask-name"
                             value={subTaskForm.name}
                             onChange={(e) => setSubTaskForm({...subTaskForm, name: e.target.value})}
+                            onKeyDown={handleKeyDown}
                             placeholder={`${task.name} - サブタスク`}
                             required
                           />
@@ -450,6 +463,7 @@ export default function TaskDetails() {
                             id="subtask-description"
                             value={subTaskForm.description}
                             onChange={(e) => setSubTaskForm({...subTaskForm, description: e.target.value})}
+                            onKeyDown={handleKeyDown}
                             placeholder={`親タスクからの継承: ${task.description || '説明なし'}`}
                             rows={3}
                           />
@@ -464,6 +478,7 @@ export default function TaskDetails() {
                             id="subtask-script"
                             value={subTaskForm.script}
                             onChange={(e) => setSubTaskForm({...subTaskForm, script: e.target.value})}
+                            onKeyDown={handleKeyDown}
                             placeholder={task.script || 'スクリプトなし'}
                             rows={5}
                           />
@@ -485,13 +500,18 @@ export default function TaskDetails() {
                             </label>
                           </div>
                         </div>
-                        <div className="d-flex justify-content-end">
-                          <button type="button" className="btn btn-secondary me-2" onClick={() => setShowCreateSubTask(false)}>
-                            キャンセル
-                          </button>
-                          <button type="submit" className="btn btn-success">
-                            サブタスク作成
-                          </button>
+                        <div className="d-flex justify-content-between align-items-center">
+                          <small className="text-muted">
+                            <kbd>Ctrl</kbd> + <kbd>Enter</kbd> で送信
+                          </small>
+                          <div>
+                            <button type="button" className="btn btn-secondary me-2" onClick={() => setShowCreateSubTask(false)}>
+                              キャンセル
+                            </button>
+                            <button type="submit" className="btn btn-success">
+                              サブタスク作成
+                            </button>
+                          </div>
                         </div>
                       </form>
                     </div>

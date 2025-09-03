@@ -4,7 +4,7 @@ import { useLoaderData, Form, useNavigation, useActionData } from "@remix-run/re
 import { useState, useEffect } from "react";
 import Layout from "~/components/Layout";
 import { useClient } from "~/components/Client";
-import { getGitPublicKeys, deleteGitPublicKey, generateGitKeyPair } from "~/utils/api";
+import { getGitPublicKeys, deleteGitPublicKey, generateGitKeyPair, createGitPublicKey } from "~/utils/api";
 import { GitPublicKey } from "~/types";
 
 export const meta: MetaFunction = () => {
@@ -23,6 +23,13 @@ export default function GitKeys() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [generatedKeyPair, setGeneratedKeyPair] = useState<{publicKey: GitPublicKey, privateKey: string} | null>(null);
+  
+  // Form states for modals
+  const [createKeyName, setCreateKeyName] = useState("");
+  const [createKeyType, setCreateKeyType] = useState<'SSH' | 'GPG'>('SSH');
+  const [createPublicKey, setCreatePublicKey] = useState("");
+  const [generateKeyName, setGenerateKeyName] = useState("");
+  const [generateKeyType, setGenerateKeyType] = useState<'SSH' | 'GPG'>('SSH');
 
   // Fetch Git public keys
   useEffect(() => {
@@ -66,9 +73,35 @@ export default function GitKeys() {
       setGeneratedKeyPair(result);
       setKeys([...keys, result.publicKey]);
       setShowGenerateModal(false);
+      setGenerateKeyName("");
+      setGenerateKeyType('SSH');
     } catch (err) {
       console.error("Failed to generate key pair:", err);
       setError("キーペアの生成に失敗しました。");
+    }
+  };
+
+  const handleCreatePublicKey = async () => {
+    if (!createKeyName.trim() || !createPublicKey.trim()) {
+      setError("キー名と公開鍵の内容を入力してください。");
+      return;
+    }
+
+    try {
+      const newKey = await createGitPublicKey(clientState, {
+        name: createKeyName,
+        keyType: createKeyType,
+        publicKey: createPublicKey
+      });
+      setKeys([...keys, newKey]);
+      setShowCreateModal(false);
+      setCreateKeyName("");
+      setCreateKeyType('SSH');
+      setCreatePublicKey("");
+      setError(null);
+    } catch (err) {
+      console.error("Failed to create public key:", err);
+      setError("公開鍵の追加に失敗しました。");
     }
   };
 
@@ -389,6 +422,169 @@ export default function GitKeys() {
                     onClick={() => setGeneratedKeyPair(null)}
                   >
                     確認しました
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Generate Key Pair Modal */}
+        {showGenerateModal && (
+          <div className="modal show" style={{ display: 'block' }} tabIndex={-1}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    <i className="bi bi-plus-circle me-2"></i>
+                    キーペア生成
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close"
+                    onClick={() => setShowGenerateModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleGenerateKeyPair(generateKeyName, generateKeyType);
+                  }}>
+                    <div className="mb-3">
+                      <label htmlFor="generateKeyName" className="form-label">キー名 *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="generateKeyName"
+                        value={generateKeyName}
+                        onChange={(e) => setGenerateKeyName(e.target.value)}
+                        placeholder="例: my-git-key"
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="generateKeyType" className="form-label">キータイプ</label>
+                      <select
+                        className="form-select"
+                        id="generateKeyType"
+                        value={generateKeyType}
+                        onChange={(e) => setGenerateKeyType(e.target.value as 'SSH' | 'GPG')}
+                      >
+                        <option value="SSH">SSH鍵</option>
+                        <option value="GPG">GPG鍵</option>
+                      </select>
+                    </div>
+                    <div className="alert alert-info">
+                      <i className="bi bi-info-circle me-2"></i>
+                      新しいキーペアを生成します。公開鍵はサーバーに保存され、秘密鍵は一度だけ表示されます。
+                    </div>
+                  </form>
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowGenerateModal(false)}
+                  >
+                    キャンセル
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-success"
+                    onClick={() => handleGenerateKeyPair(generateKeyName, generateKeyType)}
+                    disabled={!generateKeyName.trim()}
+                  >
+                    <i className="bi bi-plus-circle me-1"></i>
+                    生成
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create Public Key Modal */}
+        {showCreateModal && (
+          <div className="modal show" style={{ display: 'block' }} tabIndex={-1}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    <i className="bi bi-upload me-2"></i>
+                    公開鍵追加
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close"
+                    onClick={() => setShowCreateModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleCreatePublicKey();
+                  }}>
+                    <div className="mb-3">
+                      <label htmlFor="createKeyName" className="form-label">キー名 *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="createKeyName"
+                        value={createKeyName}
+                        onChange={(e) => setCreateKeyName(e.target.value)}
+                        placeholder="例: laptop-ssh-key"
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="createKeyType" className="form-label">キータイプ</label>
+                      <select
+                        className="form-select"
+                        id="createKeyType"
+                        value={createKeyType}
+                        onChange={(e) => setCreateKeyType(e.target.value as 'SSH' | 'GPG')}
+                      >
+                        <option value="SSH">SSH鍵</option>
+                        <option value="GPG">GPG鍵</option>
+                      </select>
+                    </div>
+                    <div className="mb-3">
+                      <label htmlFor="createPublicKey" className="form-label">公開鍵 *</label>
+                      <textarea
+                        className="form-control font-monospace"
+                        id="createPublicKey"
+                        rows={8}
+                        value={createPublicKey}
+                        onChange={(e) => setCreatePublicKey(e.target.value)}
+                        placeholder={createKeyType === 'SSH' 
+                          ? "ssh-rsa AAAAB3NzaC1yc2EAAAA... または ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA..."
+                          : "-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----"
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="alert alert-info">
+                      <i className="bi bi-info-circle me-2"></i>
+                      既存の公開鍵を追加します。秘密鍵は送信されません。
+                    </div>
+                  </form>
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowCreateModal(false)}
+                  >
+                    キャンセル
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary"
+                    onClick={handleCreatePublicKey}
+                    disabled={!createKeyName.trim() || !createPublicKey.trim()}
+                  >
+                    <i className="bi bi-upload me-1"></i>
+                    追加
                   </button>
                 </div>
               </div>
