@@ -111,7 +111,7 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
 
       setTotalCount(prevCount => prevCount + logsToAdd.length);
     }, 500); // 500ms debounce
-  }, [sessionId, realTimeEnabled]);
+  }, [sessionId, realTimeEnabled, autoUpdatePaused]);
 
   // Cleanup debounce timer on unmount
   useEffect(() => {
