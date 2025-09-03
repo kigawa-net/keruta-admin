@@ -49,6 +49,7 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [realTimeEnabled, setRealTimeEnabled] = useState(true);
+  const [autoUpdatePaused, setAutoUpdatePaused] = useState(false);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -68,7 +69,7 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
 
   // Handle real-time log creation with debouncing
   const handleLogCreated = useCallback((logData: any) => {
-    if (!realTimeEnabled) return;
+    if (!realTimeEnabled || autoUpdatePaused) return;
     
     // Convert the log data to SessionLog format
     const newLog: SessionLog = {
