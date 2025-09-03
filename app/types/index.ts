@@ -201,3 +201,29 @@ export interface CreateSessionLogData {
   userId?: string;
 }
 
+// Git Key Types
+export interface GitPublicKey {
+  id: string;
+  name: string;
+  keyType: 'SSH' | 'GPG';
+  publicKey: string;
+  fingerprint: string;
+  algorithm: string;
+  keySize?: number;
+  createdAt: string;
+  lastUsed?: string | null;
+  associatedRepositories: string[];
+  isActive: boolean;
+}
+
+export interface CreateGitPublicKeyData {
+  name: string;
+  keyType: 'SSH' | 'GPG';
+  publicKey: string;
+}
+
+export interface UpdateGitPublicKeyData {
+  name?: string;
+  isActive?: boolean;
+}
+

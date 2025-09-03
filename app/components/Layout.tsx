@@ -73,6 +73,11 @@ export default function Layout({ children }: LayoutProps) {
                 </Link>
               </li>
               <li className="nav-item">
+                <Link to="/git/keys" className="nav-link" onClick={() => setSidebarOpen(false)}>
+                  Git公開鍵管理
+                </Link>
+              </li>
+              <li className="nav-item">
                 <Link to="/workspaces" className="nav-link" onClick={() => setSidebarOpen(false)}>
                   ワークスペース
                 </Link>

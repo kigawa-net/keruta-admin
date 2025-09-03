@@ -7,7 +7,7 @@
 
 import {ClientState} from "~/components/Client";
 import {createFetchOptions} from "~/utils/apiConfig";
-import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, UpdateWorkspaceData, WorkspaceTemplate, Task, TaskLog, CreateTaskLogData, SessionLog, CreateSessionLogData} from "~/types";
+import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, UpdateWorkspaceData, WorkspaceTemplate, Task, TaskLog, CreateTaskLogData, SessionLog, CreateSessionLogData, GitPublicKey, CreateGitPublicKeyData, UpdateGitPublicKeyData} from "~/types";
 import {LogDiff, LogQuery} from "~/utils/logDiff";
 
 /**
@@ -518,4 +518,33 @@ export async function getAllLogsDiff(
     
     const endpoint = `logs/diff?${params.toString()}`;
     return apiGet<LogDiff>(clientState, endpoint);
+}
+
+// Git Public Key API Functions
+export async function getGitPublicKeys(clientState: ClientState): Promise<GitPublicKey[]> {
+    return apiGet<GitPublicKey[]>(clientState, "git/keys");
+}
+
+export async function getGitPublicKey(clientState: ClientState, keyId: string): Promise<GitPublicKey> {
+    return apiGet<GitPublicKey>(clientState, `git/keys/${keyId}`);
+}
+
+export async function createGitPublicKey(clientState: ClientState, keyData: CreateGitPublicKeyData): Promise<GitPublicKey> {
+    return apiPost<GitPublicKey, CreateGitPublicKeyData>(clientState, "git/keys", keyData);
+}
+
+export async function updateGitPublicKey(clientState: ClientState, keyId: string, keyData: UpdateGitPublicKeyData): Promise<GitPublicKey> {
+    return apiPut<GitPublicKey, UpdateGitPublicKeyData>(clientState, `git/keys/${keyId}`, keyData);
+}
+
+export async function deleteGitPublicKey(clientState: ClientState, keyId: string): Promise<void> {
+    return apiDelete(clientState, `git/keys/${keyId}`);
+}
+
+export async function getGitPublicKeysForRepository(clientState: ClientState, repositoryUrl: string): Promise<GitPublicKey[]> {
+    return apiGet<GitPublicKey[]>(clientState, `git/keys/repository?url=${encodeURIComponent(repositoryUrl)}`);
+}
+
+export async function generateGitKeyPair(clientState: ClientState, keyName: string, keyType: 'SSH' | 'GPG' = 'SSH'): Promise<{publicKey: GitPublicKey, privateKey: string}> {
+    return apiPost<{publicKey: GitPublicKey, privateKey: string}, {name: string, keyType: 'SSH' | 'GPG'}>(clientState, "git/keys/generate", {name: keyName, keyType});
 }
