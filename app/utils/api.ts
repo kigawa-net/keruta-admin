@@ -8,6 +8,7 @@
 import {ClientState} from "~/components/Client";
 import {createFetchOptions} from "~/utils/apiConfig";
 import {CoderTemplate, Session, SessionFormData, Template, Workspace, CreateWorkspaceData, UpdateWorkspaceData, WorkspaceTemplate, Task, TaskLog, CreateTaskLogData, SessionLog, CreateSessionLogData} from "~/types";
+import {LogDiff, LogQuery} from "~/utils/logDiff";
 
 /**
  * Generic API error class
@@ -416,4 +417,85 @@ export async function getRecentSessionLogs(clientState: ClientState, limit: numb
 
 export async function getSessionLogsByLevel(clientState: ClientState, level: string, limit: number = 100): Promise<SessionLog[]> {
     return apiGet<SessionLog[]>(clientState, `sessions/logs/level/${level}?limit=${limit}`);
+}
+
+// Log Diff API Functions
+export async function getTaskLogsDiff(
+    clientState: ClientState,
+    taskId: string,
+    query: LogQuery
+): Promise<LogDiff> {
+    const params = new URLSearchParams();
+    
+    if (query.since) {
+        params.append('since', query.since);
+    }
+    if (query.version) {
+        params.append('version', query.version.toString());
+    }
+    if (query.limit) {
+        params.append('limit', query.limit.toString());
+    }
+    if (query.level) {
+        params.append('level', query.level);
+    }
+    if (query.source) {
+        params.append('source', query.source);
+    }
+    
+    const endpoint = `tasks/${taskId}/logs/diff?${params.toString()}`;
+    return apiGet<LogDiff>(clientState, endpoint);
+}
+
+export async function getSessionLogsDiff(
+    clientState: ClientState,
+    sessionId: string,
+    query: LogQuery
+): Promise<LogDiff> {
+    const params = new URLSearchParams();
+    
+    if (query.since) {
+        params.append('since', query.since);
+    }
+    if (query.version) {
+        params.append('version', query.version.toString());
+    }
+    if (query.limit) {
+        params.append('limit', query.limit.toString());
+    }
+    if (query.level) {
+        params.append('level', query.level);
+    }
+    if (query.source) {
+        params.append('source', query.source);
+    }
+    
+    const endpoint = `sessions/${sessionId}/logs/diff?${params.toString()}`;
+    return apiGet<LogDiff>(clientState, endpoint);
+}
+
+export async function getAllLogsDiff(
+    clientState: ClientState,
+    query: LogQuery
+): Promise<LogDiff> {
+    const params = new URLSearchParams();
+    
+    if (query.since) {
+        params.append('since', query.since);
+    }
+    if (query.version) {
+        params.append('version', query.version.toString());
+    }
+    if (query.limit) {
+        params.append('limit', query.limit.toString());
+    }
+    if (query.level) {
+        params.append('level', query.level);
+    }
+    if (query.source) {
+        params.append('source', query.source);
+    }
+    
+    const endpoint = `logs/diff?${params.toString()}`;
+    return apiGet<LogDiff>(clientState, endpoint);
 }

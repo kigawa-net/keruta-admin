@@ -1,5 +1,7 @@
 import { Link } from "@remix-run/react";
 import { ReactNode, useState } from "react";
+import { RealtimeProvider } from "~/contexts/RealtimeContext";
+import RealtimeIndicator from "~/components/RealtimeIndicator";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,8 +15,9 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="container-fluid">
-      <div className="row">
+    <RealtimeProvider>
+      <div className="container-fluid">
+        <div className="row">
         {/* Mobile Header */}
         <div className="d-md-none bg-primary text-white p-3 mobile-header">
           <div className="d-flex justify-content-between align-items-center">
@@ -100,12 +103,16 @@ export default function Layout({ children }: LayoutProps) {
         {/* Main Content */}
         <main className="col-md-9 ms-sm-auto col-lg-10 px-2 px-md-4">
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 className="h2 d-none d-md-block">keruta管理パネル</h1>
-            <h1 className="h4 d-md-none">ダッシュボード</h1>
+            <div>
+              <h1 className="h2 d-none d-md-block">keruta管理パネル</h1>
+              <h1 className="h4 d-md-none">ダッシュボード</h1>
+            </div>
+            <RealtimeIndicator compact={true} />
           </div>
           {children}
         </main>
       </div>
     </div>
+    </RealtimeProvider>
   );
 }

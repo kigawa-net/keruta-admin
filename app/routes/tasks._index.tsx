@@ -3,6 +3,8 @@ import type {MetaFunction} from "@remix-run/node";
 import Layout from "~/components/Layout";
 import {apiDelete, apiGet} from "~/utils/api";
 import {ClientState, useClient} from "~/components/Client";
+import {useManagementSSE} from "~/hooks/useManagementSSE";
+import RealtimeIndicator from "~/components/RealtimeIndicator";
 
 export const meta: MetaFunction = () => {
     return [
@@ -76,6 +78,7 @@ export default function Tasks() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [sessions, setSessions] = useState<Record<string, Session>>({});
+    const [connectionStatus, setConnectionStatus] = useState<string>("");
     const clientState = useClient()
 
     // セッション一覧を取得する関数
@@ -114,11 +117,51 @@ export default function Tasks() {
         }
     };
 
+    // Real-time updates for tasks
+    const { connected, error: sseError, lastEventTime } = useManagementSSE({
+        clientState,
+        onTaskUpdate: (updatedTask) => {
+            setTasks(prevTasks => 
+                prevTasks.map(task => 
+                    task.id === updatedTask.id ? updatedTask : task
+                )
+            );
+            setConnectionStatus(`Task updated: ${new Date().toLocaleTimeString()}`);
+        },
+        onTaskCreated: (newTask) => {
+            setTasks(prevTasks => [newTask, ...prevTasks]);
+            setConnectionStatus(`New task created: ${new Date().toLocaleTimeString()}`);
+        },
+        onTaskDeleted: (taskId) => {
+            setTasks(prevTasks => 
+                prevTasks.filter(task => task.id !== taskId)
+            );
+            setConnectionStatus(`Task deleted: ${new Date().toLocaleTimeString()}`);
+        },
+        onSessionUpdate: (updatedSession) => {
+            setSessions(prevSessions => ({
+                ...prevSessions,
+                [updatedSession.id]: updatedSession
+            }));
+        }
+    });
+
     // コンポーネントのマウント時にタスク一覧とセッション一覧を取得
     useEffect(() => {
         fetchSessions(clientState);
         fetchTasks(clientState);
     }, [clientState]);
+
+    // Update connection status
+    useEffect(() => {
+        if (connected && !sseError) {
+            setConnectionStatus("リアルタイム更新: 接続中");
+        } else if (sseError) {
+            setConnectionStatus(`リアルタイム更新: エラー - ${sseError}`);
+        } else {
+            setConnectionStatus("リアルタイム更新: 切断");
+        }
+    }, [connected, sseError]);
 
     // 更新ボタンのクリックハンドラ
     const handleRefresh = () => {
@@ -153,7 +196,10 @@ export default function Tasks() {
     return (
         <Layout>
             <div className="tasks">
-                <h2>タスク管理</h2>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h2>タスク管理</h2>
+                    <RealtimeIndicator showStatus={true} />
+                </div>
 
                 <div className="d-flex justify-content-between mb-3">
                     <div>

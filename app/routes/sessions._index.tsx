@@ -4,6 +4,8 @@ import Layout from "~/components/Layout";
 import {apiDelete, getSessions, syncSessionStatus, monitorSessionWorkspaces} from "~/utils/api";
 import {ClientState, useClient} from "~/components/Client";
 import {Session} from "~/types";
+import {useManagementSSE} from "~/hooks/useManagementSSE";
+import RealtimeIndicator from "~/components/RealtimeIndicator";
 
 export const meta: MetaFunction = () => {
     return [
@@ -62,6 +64,7 @@ export default function Sessions() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const clientState = useClient()
+    const [connectionStatus, setConnectionStatus] = useState<string>("");
 
     // セッション一覧を取得する関数
     const fetchSessions = async (clientState: ClientState) => {
@@ -84,10 +87,44 @@ export default function Sessions() {
         }
     };
 
+    // Real-time updates for sessions
+    const { connected, error: sseError, lastEventTime } = useManagementSSE({
+        clientState,
+        onSessionUpdate: (updatedSession) => {
+            setSessions(prevSessions => 
+                prevSessions.map(session => 
+                    session.id === updatedSession.id ? updatedSession : session
+                )
+            );
+            setConnectionStatus(`Last updated: ${new Date().toLocaleTimeString()}`);
+        },
+        onSessionCreated: (newSession) => {
+            setSessions(prevSessions => [newSession, ...prevSessions]);
+            setConnectionStatus(`New session created: ${new Date().toLocaleTimeString()}`);
+        },
+        onSessionDeleted: (sessionId) => {
+            setSessions(prevSessions => 
+                prevSessions.filter(session => session.id !== sessionId)
+            );
+            setConnectionStatus(`Session deleted: ${new Date().toLocaleTimeString()}`);
+        }
+    });
+
     // コンポーネントのマウント時にセッション一覧を取得
     useEffect(() => {
         fetchSessions(clientState);
     }, [clientState]);
+
+    // Update connection status
+    useEffect(() => {
+        if (connected && !sseError) {
+            setConnectionStatus("リアルタイム更新: 接続中");
+        } else if (sseError) {
+            setConnectionStatus(`リアルタイム更新: エラー - ${sseError}`);
+        } else {
+            setConnectionStatus("リアルタイム更新: 切断");
+        }
+    }, [connected, sseError]);
 
     // 更新ボタンのクリックハンドラ
     const handleRefresh = () => {
@@ -177,7 +214,10 @@ export default function Sessions() {
     return (
         <Layout>
             <div className="sessions">
-                <h2>セッション管理</h2>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h2>セッション管理</h2>
+                    <RealtimeIndicator showStatus={true} />
+                </div>
 
                 <div className="d-flex flex-column flex-md-row justify-content-between mb-3 gap-3">
                     <div className="d-flex flex-wrap gap-2">
