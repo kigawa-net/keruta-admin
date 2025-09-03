@@ -681,8 +681,8 @@ export default function SessionDetails() {
                 <table className="table table-striped table-hover">
                   <thead>
                     <tr>
-                      <th>ID</th>
                       <th>タイトル</th>
+                      <th>ID</th>
                       <th>ステータス</th>
                       <th>作成日時</th>
                       <th>更新日時</th>
@@ -692,8 +692,8 @@ export default function SessionDetails() {
                   <tbody>
                     {tasks.map((task) => (
                       <tr key={task.id}>
-                        <td>{task.id}</td>
                         <td>{task.title}</td>
+                        <td>{task.id}</td>
                         <td>
                           <span className={`badge ${getStatusBadgeClass(task.status)}`}>
                             {task.status}
