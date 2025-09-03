@@ -3,10 +3,11 @@ import type { MetaFunction } from "@remix-run/node";
 import { useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
 import GitCommitFailures from "~/components/GitCommitFailures";
-import { getTask, deleteTask, getTaskLogs, getTaskLogCount, deleteTaskLogs } from "~/utils/api";
+import { getTask, deleteTask, getTaskLogs, getTaskLogCount, deleteTaskLogs, pauseTask, resumeTask } from "~/utils/api";
 import { useClient } from "~/components/Client";
 import { hasGitCommitFailures } from "~/utils/gitCommitLogs";
 import type { Task, TaskLog } from "~/types";
+import { formatDate } from "~/utils/dateUtils";
 
 export const meta: MetaFunction = () => {
   return [
@@ -39,8 +40,11 @@ function getStatusBadgeClass(status: string): string {
     case "SUCCESS":
       return "bg-success";
     case "PENDING":
+      return "bg-secondary";
     case "RUNNING":
       return "bg-warning text-dark";
+    case "PAUSED":
+      return "bg-info text-dark";
     case "FAILED":
     case "ERROR":
       return "bg-danger";
@@ -49,18 +53,6 @@ function getStatusBadgeClass(status: string): string {
   }
 }
 
-// 日時のフォーマット関数
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
 
 export default function TaskDetails() {
   const navigate = useNavigate();
@@ -169,6 +161,32 @@ export default function TaskDetails() {
     navigate(`/tasks/edit/${taskId}`);
   };
 
+  // タスク一時停止のハンドラ
+  const handlePause = async () => {
+    if (!task || !taskId) return;
+    if (clientState.state === "loading") return;
+
+    try {
+      const updatedTask = await pauseTask(clientState, taskId);
+      setTask(updatedTask);
+    } catch (err) {
+      console.error("タスクの一時停止に失敗しました:", err);
+    }
+  };
+
+  // タスク再開のハンドラ
+  const handleResume = async () => {
+    if (!task || !taskId) return;
+    if (clientState.state === "loading") return;
+
+    try {
+      const updatedTask = await resumeTask(clientState, taskId);
+      setTask(updatedTask);
+    } catch (err) {
+      console.error("タスクの再開に失敗しました:", err);
+    }
+  };
+
   return (
     <Layout>
       <div className="task-details">
@@ -179,6 +197,16 @@ export default function TaskDetails() {
             ← タスク一覧に戻る
           </button>
           <div>
+            {task && task.status.toUpperCase() === 'RUNNING' && (
+              <button className="btn btn-outline-warning me-2" onClick={handlePause}>
+                一時停止
+              </button>
+            )}
+            {task && task.status.toUpperCase() === 'PAUSED' && (
+              <button className="btn btn-outline-success me-2" onClick={handleResume}>
+                再開
+              </button>
+            )}
             <button className="btn btn-outline-primary me-2" onClick={handleEdit}>
               編集
             </button>

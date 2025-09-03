@@ -34,7 +34,7 @@ export function useSessionSSE({ clientState, sessionId, onEvent, onLogCreated }:
     disconnect();
 
     try {
-      const url = new URL(`${clientState.apiUrl}/api/v1/sessions/realtime/events`);
+      const url = new URL(`${clientState.apiUrl}/sessions/realtime/events`);
       if (sessionId) {
         url.searchParams.set('sessionId', sessionId);
       }

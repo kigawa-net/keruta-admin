@@ -270,8 +270,20 @@ export async function createTask(clientState: ClientState, taskData: {sessionId:
     return apiPost<Task, {sessionId: string, name: string, description?: string, script?: string}>(clientState, "tasks", taskData);
 }
 
+export async function updateTask(clientState: ClientState, taskId: string, taskData: Partial<Task>): Promise<Task> {
+    return apiPut<Task, Partial<Task>>(clientState, `tasks/${taskId}`, taskData);
+}
+
 export async function deleteTask(clientState: ClientState, taskId: string): Promise<void> {
     return apiDelete(clientState, `tasks/${taskId}`);
+}
+
+export async function pauseTask(clientState: ClientState, taskId: string): Promise<Task> {
+    return apiPost<Task>(clientState, `tasks/${taskId}/pause`, {});
+}
+
+export async function resumeTask(clientState: ClientState, taskId: string): Promise<Task> {
+    return apiPost<Task>(clientState, `tasks/${taskId}/resume`, {});
 }
 
 // Task Log API Functions

@@ -147,7 +147,7 @@ export interface Task {
   name: string;
   description: string;
   script: string;
-  status: string;
+  status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'ERROR' | string;
   message: string;
   progress: number;
   errorCode: string;

@@ -35,6 +35,26 @@ export interface ProcessStatus {
 
 export type LogStreamCallback = (log: LogEntry) => void;
 export type StatusChangeCallback = (status: ProcessStatus) => void;
+export type LogPatternCallback = (pattern: string, logs: LogEntry[]) => void;
+
+export interface StreamProcessor {
+  id: string;
+  name: string;
+  filter?: (log: LogEntry) => boolean;
+  transform?: (log: LogEntry) => LogEntry;
+  batchSize?: number;
+  batchTimeout?: number;
+  onBatch?: (logs: LogEntry[]) => void;
+}
+
+export interface LogPattern {
+  id: string;
+  name: string;
+  pattern: RegExp;
+  threshold: number;
+  timeWindow: number; // milliseconds
+  callback: LogPatternCallback;
+}
 
 export class SubprocessAgent {
   private processes = new Map<string, ChildProcess>();
@@ -42,6 +62,12 @@ export class SubprocessAgent {
   private logCallbacks = new Set<LogStreamCallback>();
   private statusCallbacks = new Set<StatusChangeCallback>();
   private logBuffer = new Map<string, LogEntry[]>();
+  
+  // Enhanced stream processing
+  private streamProcessors = new Map<string, StreamProcessor>();
+  private logPatterns = new Map<string, LogPattern>();
+  private patternMatches = new Map<string, { logs: LogEntry[], timestamps: number[] }>();
+  private processorBatches = new Map<string, { logs: LogEntry[], timeout?: NodeJS.Timeout }>();
 
   /**
    * Subscribe to log stream events
@@ -329,6 +355,201 @@ export class SubprocessAgent {
     return logs.filter(log => regex.test(log.message));
   }
 
+  /**
+   * Register a stream processor for real-time log processing
+   */
+  addStreamProcessor(processor: StreamProcessor): () => void {
+    this.streamProcessors.set(processor.id, processor);
+    
+    if (processor.batchSize) {
+      this.processorBatches.set(processor.id, { logs: [] });
+    }
+    
+    return () => {
+      this.removeStreamProcessor(processor.id);
+    };
+  }
+
+  /**
+   * Remove a stream processor
+   */
+  removeStreamProcessor(processorId: string): void {
+    const batch = this.processorBatches.get(processorId);
+    if (batch?.timeout) {
+      clearTimeout(batch.timeout);
+    }
+    
+    this.streamProcessors.delete(processorId);
+    this.processorBatches.delete(processorId);
+  }
+
+  /**
+   * Register a log pattern for detection and alerting
+   */
+  addLogPattern(pattern: LogPattern): () => void {
+    this.logPatterns.set(pattern.id, pattern);
+    this.patternMatches.set(pattern.id, { logs: [], timestamps: [] });
+    
+    return () => {
+      this.removeLogPattern(pattern.id);
+    };
+  }
+
+  /**
+   * Remove a log pattern
+   */
+  removeLogPattern(patternId: string): void {
+    this.logPatterns.delete(patternId);
+    this.patternMatches.delete(patternId);
+  }
+
+  /**
+   * Get real-time log statistics
+   */
+  getLogStats(processId?: string): {
+    total: number;
+    byLevel: Record<LogEntry['level'], number>;
+    bySource: Record<LogEntry['source'], number>;
+    errorRate: number;
+    recentActivity: { timestamp: string; count: number }[];
+  } {
+    const logs = processId ? this.getLogHistory(processId) : this.getAllLogHistory();
+    
+    const stats = {
+      total: logs.length,
+      byLevel: { info: 0, error: 0, warn: 0, debug: 0 } as Record<LogEntry['level'], number>,
+      bySource: { stdout: 0, stderr: 0, system: 0 } as Record<LogEntry['source'], number>,
+      errorRate: 0,
+      recentActivity: [] as { timestamp: string; count: number }[]
+    };
+
+    // Calculate stats
+    logs.forEach(log => {
+      stats.byLevel[log.level]++;
+      stats.bySource[log.source]++;
+    });
+
+    stats.errorRate = stats.total > 0 ? (stats.byLevel.error / stats.total) * 100 : 0;
+
+    // Recent activity (last hour, grouped by 5-minute intervals)
+    const now = Date.now();
+    const hourAgo = now - 60 * 60 * 1000;
+    const recentLogs = logs.filter(log => new Date(log.timestamp).getTime() > hourAgo);
+    
+    const intervals = new Map<string, number>();
+    recentLogs.forEach(log => {
+      const timestamp = new Date(log.timestamp);
+      const intervalKey = new Date(
+        timestamp.getFullYear(),
+        timestamp.getMonth(),
+        timestamp.getDate(),
+        timestamp.getHours(),
+        Math.floor(timestamp.getMinutes() / 5) * 5
+      ).toISOString();
+      
+      intervals.set(intervalKey, (intervals.get(intervalKey) || 0) + 1);
+    });
+
+    stats.recentActivity = Array.from(intervals.entries())
+      .map(([timestamp, count]) => ({ timestamp, count }))
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    return stats;
+  }
+
+  /**
+   * Stream processing: Get logs with advanced filtering
+   */
+  getFilteredLogs(options: {
+    processId?: string;
+    levels?: LogEntry['level'][];
+    sources?: LogEntry['source'][];
+    timeRange?: { start: string; end: string };
+    pattern?: RegExp;
+    limit?: number;
+    offset?: number;
+  }): LogEntry[] {
+    let logs = options.processId ? this.getLogHistory(options.processId) : this.getAllLogHistory();
+
+    // Apply filters
+    if (options.levels) {
+      logs = logs.filter(log => options.levels!.includes(log.level));
+    }
+
+    if (options.sources) {
+      logs = logs.filter(log => options.sources!.includes(log.source));
+    }
+
+    if (options.timeRange) {
+      const start = new Date(options.timeRange.start).getTime();
+      const end = new Date(options.timeRange.end).getTime();
+      logs = logs.filter(log => {
+        const logTime = new Date(log.timestamp).getTime();
+        return logTime >= start && logTime <= end;
+      });
+    }
+
+    if (options.pattern) {
+      logs = logs.filter(log => options.pattern!.test(log.message));
+    }
+
+    // Apply pagination
+    const offset = options.offset || 0;
+    const limit = options.limit || logs.length;
+    
+    return logs.slice(offset, offset + limit);
+  }
+
+  /**
+   * Stream processing: Real-time log aggregation
+   */
+  getAggregatedLogs(options: {
+    processId?: string;
+    groupBy: 'level' | 'source' | 'hour' | 'minute';
+    timeRange?: { start: string; end: string };
+  }): Record<string, LogEntry[]> {
+    let logs = options.processId ? this.getLogHistory(options.processId) : this.getAllLogHistory();
+
+    if (options.timeRange) {
+      const start = new Date(options.timeRange.start).getTime();
+      const end = new Date(options.timeRange.end).getTime();
+      logs = logs.filter(log => {
+        const logTime = new Date(log.timestamp).getTime();
+        return logTime >= start && logTime <= end;
+      });
+    }
+
+    const groups: Record<string, LogEntry[]> = {};
+
+    logs.forEach(log => {
+      let key: string;
+      
+      switch (options.groupBy) {
+        case 'level':
+          key = log.level;
+          break;
+        case 'source':
+          key = log.source;
+          break;
+        case 'hour':
+          key = new Date(log.timestamp).toISOString().substring(0, 13); // YYYY-MM-DDTHH
+          break;
+        case 'minute':
+          key = new Date(log.timestamp).toISOString().substring(0, 16); // YYYY-MM-DDTHH:mm
+          break;
+        default:
+          key = 'unknown';
+      }
+
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(log);
+    });
+
+    return groups;
+  }
+
   private emitLog(log: LogEntry): void {
     // Add to buffer
     const logs = this.logBuffer.get(log.processId) || [];
@@ -341,12 +562,120 @@ export class SubprocessAgent {
     
     this.logBuffer.set(log.processId, logs);
 
+    // Process through stream processors
+    this.processLogThroughStreams(log);
+    
+    // Check for pattern matches
+    this.checkLogPatterns(log);
+
     // Emit to callbacks
     this.logCallbacks.forEach(callback => {
       try {
         callback(log);
       } catch (error) {
         console.error('Error in log callback:', error);
+      }
+    });
+  }
+
+  private processLogThroughStreams(log: LogEntry): void {
+    this.streamProcessors.forEach((processor, processorId) => {
+      try {
+        // Apply filter if specified
+        if (processor.filter && !processor.filter(log)) {
+          return;
+        }
+
+        // Apply transform if specified
+        const transformedLog = processor.transform ? processor.transform(log) : log;
+
+        // Handle batching
+        if (processor.batchSize) {
+          const batch = this.processorBatches.get(processorId);
+          if (batch) {
+            batch.logs.push(transformedLog);
+
+            // Clear existing timeout
+            if (batch.timeout) {
+              clearTimeout(batch.timeout);
+            }
+
+            // Check if batch is full
+            if (batch.logs.length >= processor.batchSize) {
+              this.flushProcessorBatch(processorId);
+            } else if (processor.batchTimeout) {
+              // Set timeout for batch processing
+              batch.timeout = setTimeout(() => {
+                this.flushProcessorBatch(processorId);
+              }, processor.batchTimeout);
+            }
+          }
+        } else if (processor.onBatch) {
+          // Process immediately if no batching
+          processor.onBatch([transformedLog]);
+        }
+      } catch (error) {
+        console.error(`Error in stream processor ${processor.name}:`, error);
+      }
+    });
+  }
+
+  private flushProcessorBatch(processorId: string): void {
+    const processor = this.streamProcessors.get(processorId);
+    const batch = this.processorBatches.get(processorId);
+    
+    if (processor && batch && batch.logs.length > 0) {
+      try {
+        if (processor.onBatch) {
+          processor.onBatch([...batch.logs]);
+        }
+      } catch (error) {
+        console.error(`Error flushing batch for processor ${processor.name}:`, error);
+      }
+      
+      // Clear batch
+      batch.logs = [];
+      if (batch.timeout) {
+        clearTimeout(batch.timeout);
+        batch.timeout = undefined;
+      }
+    }
+  }
+
+  private checkLogPatterns(log: LogEntry): void {
+    const now = Date.now();
+    
+    this.logPatterns.forEach((pattern, patternId) => {
+      try {
+        if (pattern.pattern.test(log.message)) {
+          const matches = this.patternMatches.get(patternId);
+          if (matches) {
+            matches.logs.push(log);
+            matches.timestamps.push(now);
+
+            // Clean old matches outside time window
+            const cutoff = now - pattern.timeWindow;
+            let index = 0;
+            while (index < matches.timestamps.length && matches.timestamps[index] < cutoff) {
+              index++;
+            }
+            if (index > 0) {
+              matches.logs.splice(0, index);
+              matches.timestamps.splice(0, index);
+            }
+
+            // Check if threshold is reached
+            if (matches.logs.length >= pattern.threshold) {
+              pattern.callback(pattern.name, [...matches.logs]);
+              
+              // Reset matches after triggering
+              matches.logs = [];
+              matches.timestamps = [];
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error checking pattern ${pattern.name}:`, error);
       }
     });
   }
@@ -378,12 +707,23 @@ export class SubprocessAgent {
       this.killProcess(processId);
     }
 
+    // Clear all batch timeouts
+    this.processorBatches.forEach(batch => {
+      if (batch.timeout) {
+        clearTimeout(batch.timeout);
+      }
+    });
+
     // Clear all data
     this.processes.clear();
     this.processStatuses.clear();
     this.logBuffer.clear();
     this.logCallbacks.clear();
     this.statusCallbacks.clear();
+    this.streamProcessors.clear();
+    this.logPatterns.clear();
+    this.patternMatches.clear();
+    this.processorBatches.clear();
   }
 }
 

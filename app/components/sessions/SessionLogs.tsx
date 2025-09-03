@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useClient, ClientState } from "~/components/Client";
 import { SessionLog } from "~/types";
 import { getSessionLogs, getSessionLogCount } from "~/utils/api";
@@ -62,7 +62,11 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
   const [preserveLineBreaks, setPreserveLineBreaks] = useState(true);
 
-  // Handle real-time log creation
+  // Debounce timer for log updates
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingLogsRef = useRef<SessionLog[]>([]);
+
+  // Handle real-time log creation with debouncing
   const handleLogCreated = useCallback((logData: any) => {
     if (!realTimeEnabled) return;
     
@@ -80,18 +84,42 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
       timestamp: logData.timestamp
     };
 
-    // Add the new log to the beginning of the list (newest first)
-    setLogs(prevLogs => {
-      // Check if log already exists to prevent duplicates
-      if (prevLogs.some(log => log.id === newLog.id)) {
-        return prevLogs;
-      }
-      return [newLog, ...prevLogs];
-    });
-    
-    // Update total count
-    setTotalCount(prevCount => prevCount + 1);
+    // Add to pending logs and debounce the update
+    pendingLogsRef.current.push(newLog);
+
+    // Clear existing timer
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current);
+    }
+
+    // Set new timer to batch updates
+    updateTimerRef.current = setTimeout(() => {
+      const logsToAdd = [...pendingLogsRef.current];
+      pendingLogsRef.current = [];
+
+      if (logsToAdd.length === 0) return;
+
+      setLogs(prevLogs => {
+        const existingIds = new Set(prevLogs.map(log => log.id));
+        const uniqueNewLogs = logsToAdd.filter(log => !existingIds.has(log.id));
+        
+        if (uniqueNewLogs.length === 0) return prevLogs;
+        
+        return [...uniqueNewLogs, ...prevLogs];
+      });
+
+      setTotalCount(prevCount => prevCount + logsToAdd.length);
+    }, 500); // 500ms debounce
   }, [sessionId, realTimeEnabled]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+    };
+  }, []);
 
   // Set up SSE connection for real-time updates
   const { connected: sseConnected, error: sseError } = useSessionSSE({
@@ -181,9 +209,12 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
     });
   };
 
-  // Get unique values for filter dropdowns
-  const uniqueSources = [...new Set(logs.map(log => log.source))];
-  const uniqueActions = [...new Set(logs.map(log => log.action))];
+  // Get unique values for filter dropdowns (memoized to prevent recalculation)
+  const uniqueSources = useMemo(() => [...new Set(logs.map(log => log.source))], [logs]);
+  const uniqueActions = useMemo(() => [...new Set(logs.map(log => log.action))], [logs]);
+
+  // Memoize reversed logs to prevent recreation on every render
+  const displayLogs = useMemo(() => logs.slice().reverse(), [logs]);
 
   if (loading && logs.length === 0) {
     return (
@@ -334,7 +365,7 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
         <>
           {/* Log entries */}
           <div className="logs-container">
-            {logs.slice().reverse().map((log) => (
+            {displayLogs.map((log) => (
               <div key={log.id} className="card mb-2">
                 <div className="card-body p-3">
                   <div className="d-flex justify-content-between align-items-start mb-2">

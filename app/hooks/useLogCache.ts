@@ -59,7 +59,7 @@ const DEFAULT_OPTIONS: Required<UseLogCacheOptions> = {
   maxEntries: 1000,
   retainPeriodMs: 24 * 60 * 60 * 1000, // 24 hours
   autoOptimize: true,
-  optimizeInterval: 5 * 60 * 1000 // 5 minutes
+  optimizeInterval: 10 * 60 * 1000 // 10 minutes (reduced frequency)
 };
 
 export function useLogCache(options: UseLogCacheOptions = {}): UseLogCacheResult {
@@ -117,15 +117,16 @@ export function useLogCache(options: UseLogCacheOptions = {}): UseLogCacheResult
       const newState = applyLogDiff(prevState, diff);
       statsRef.current.lastUpdate = new Date();
       
-      // Log diff stats for debugging
-      const diffSize = calculateDiffSize(diff);
-      console.debug('Applied log diff:', {
-        added: diffSize.addedCount,
-        updated: diffSize.updatedCount,
-        deleted: diffSize.deletedCount,
-        estimatedBytes: diffSize.estimatedBytes,
-        version: diff.version
-      });
+      // Log diff stats for debugging (reduced logging)
+      if (process.env.NODE_ENV === 'development') {
+        const diffSize = calculateDiffSize(diff);
+        console.debug('Applied log diff:', {
+          added: diffSize.addedCount,
+          updated: diffSize.updatedCount,
+          deleted: diffSize.deletedCount,
+          version: diff.version
+        });
+      }
       
       return newState;
     });

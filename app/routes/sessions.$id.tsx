@@ -7,6 +7,7 @@ import GitCommitFailures from "~/components/GitCommitFailures";
 import { getSession, deleteSession, apiGet, createTask, getWorkspaces, startWorkspace, stopWorkspace } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
 import { Session, Workspace } from "~/types";
+import { formatDate } from "~/utils/dateUtils";
 
 export const meta: MetaFunction = () => {
   return [
@@ -48,18 +49,6 @@ function getStatusBadgeClass(status: string): string {
   }
 }
 
-// 日時のフォーマット関数
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
 
 export default function SessionDetails() {
   const navigate = useNavigate();

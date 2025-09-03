@@ -34,7 +34,7 @@ export function useSessionSSEWithDiff({
   onEvent,
   onLogCreated,
   onLogDiffReceived,
-  pollInterval = 5000,
+  pollInterval = 10000,
   enableLogPolling = true
 }: UseSessionSSEWithDiffProps) {
   const [connected, setConnected] = useState(false);
@@ -47,10 +47,11 @@ export function useSessionSSEWithDiff({
   const MAX_RECONNECT_ATTEMPTS = 5;
   const RECONNECT_INTERVAL = 5000;
 
-  // Use log cache for diff tracking
+  // Use log cache for diff tracking (optimized settings)
   const logCache = useLogCache({
     maxEntries: 2000,
-    autoOptimize: true
+    autoOptimize: true,
+    optimizeInterval: 15 * 60 * 1000 // 15 minutes for better performance
   });
 
   // Poll for log diffs
@@ -112,7 +113,7 @@ export function useSessionSSEWithDiff({
     disconnect();
 
     try {
-      const url = new URL(`${clientState.apiUrl}/api/v1/sessions/realtime/events`);
+      const url = new URL(`${clientState.apiUrl}/sessions/realtime/events`);
       if (sessionId) {
         url.searchParams.set('sessionId', sessionId);
       }

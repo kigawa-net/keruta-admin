@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { Form, useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { apiGet, apiPut } from "~/utils/api";
+import { apiGet, updateTask } from "~/utils/api";
 import { useClient } from "~/components/Client";
+import { Task } from "~/types/index";
 
 export const meta: MetaFunction = () => {
   return [
@@ -11,28 +12,6 @@ export const meta: MetaFunction = () => {
     { name: "description", content: "既存のタスクを編集します" },
   ];
 };
-
-// タスクデータの型定義
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  priority: number;
-  status: string;
-  documents: any[];
-  image: string | null;
-  namespace: string;
-  jobName: string | null;
-  podName: string | null;
-  additionalEnv: Record<string, string>;
-  kubernetesManifest: any | null;
-  logs: string | null;
-  agentId: string | null;
-  repositoryId: string | null;
-  parentId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export default function EditTask() {
   const navigate = useNavigate();
@@ -77,15 +56,15 @@ export default function EditTask() {
 
     // フォームデータからタスクオブジェクトを作成
     const updatedTask = {
-      title: formData.get("title") as string,
+      name: formData.get("name") as string,
       description: formData.get("description") as string,
-      priority: parseInt(formData.get("priority") as string) || 0,
+      script: formData.get("script") as string,
       // 必要に応じて他のフィールドを追加
     };
 
     try {
       // APIを使用してタスクを更新
-      await apiPut(clientState, `tasks/${taskId}`, updatedTask);
+      await updateTask(clientState, taskId, updatedTask);
       // 成功したらタスク一覧ページに戻る
       navigate("/tasks");
     } catch (err) {
@@ -122,15 +101,15 @@ export default function EditTask() {
             ) : task ? (
               <Form method="post" onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="title" className="form-label">タイトル</label>
+                  <label htmlFor="name" className="form-label">名前</label>
                   <input
                     type="text"
                     className="form-control"
-                    id="title"
-                    name="title"
+                    id="name"
+                    name="name"
                     required
-                    defaultValue={task.title}
-                    placeholder="タスクのタイトルを入力"
+                    defaultValue={task.name}
+                    placeholder="タスクの名前を入力"
                   />
                 </div>
 
@@ -147,17 +126,15 @@ export default function EditTask() {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="priority" className="form-label">優先度</label>
-                  <select
-                    className="form-select"
-                    id="priority"
-                    name="priority"
-                    defaultValue={task.priority.toString()}
-                  >
-                    <option value="0">低</option>
-                    <option value="1">中</option>
-                    <option value="2">高</option>
-                  </select>
+                  <label htmlFor="script" className="form-label">スクリプト</label>
+                  <textarea
+                    className="form-control"
+                    id="script"
+                    name="script"
+                    rows={5}
+                    defaultValue={task.script}
+                    placeholder="実行するスクリプトを入力"
+                  ></textarea>
                 </div>
 
                 <div className="d-flex justify-content-between">

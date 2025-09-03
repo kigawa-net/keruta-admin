@@ -94,7 +94,7 @@ export function useManagementSSE({
     disconnect();
 
     try {
-      const url = new URL(`${clientState.apiUrl}/api/v1/management/realtime`);
+      const url = new URL(`${clientState.apiUrl}/sessions/realtime/events`);
       const eventSource = new EventSource(url.toString());
       eventSourceRef.current = eventSource;
 
