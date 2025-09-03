@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useClient, ClientState } from "~/components/Client";
 import { SessionLog } from "~/types";
 import { getSessionLogs, getSessionLogCount } from "~/utils/api";
+import { useSessionSSE } from "~/hooks/useSessionSSE";
 
 interface SessionLogsProps {
   sessionId: string;
@@ -47,6 +48,7 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [realTimeEnabled, setRealTimeEnabled] = useState(true);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -59,6 +61,44 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
 
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
   const [preserveLineBreaks, setPreserveLineBreaks] = useState(true);
+
+  // Handle real-time log creation
+  const handleLogCreated = useCallback((logData: any) => {
+    if (!realTimeEnabled) return;
+    
+    // Convert the log data to SessionLog format
+    const newLog: SessionLog = {
+      id: logData.id,
+      sessionId: logData.sessionId || sessionId,
+      level: logData.level,
+      source: logData.source,
+      action: logData.action,
+      message: logData.message,
+      details: logData.details || undefined,
+      metadata: logData.metadata || {},
+      userId: logData.userId || undefined,
+      timestamp: logData.timestamp
+    };
+
+    // Add the new log to the beginning of the list (newest first)
+    setLogs(prevLogs => {
+      // Check if log already exists to prevent duplicates
+      if (prevLogs.some(log => log.id === newLog.id)) {
+        return prevLogs;
+      }
+      return [newLog, ...prevLogs];
+    });
+    
+    // Update total count
+    setTotalCount(prevCount => prevCount + 1);
+  }, [sessionId, realTimeEnabled]);
+
+  // Set up SSE connection for real-time updates
+  const { connected: sseConnected, error: sseError } = useSessionSSE({
+    clientState,
+    sessionId,
+    onLogCreated: handleLogCreated,
+  });
 
   // Fetch session logs
   const fetchLogs = async (clientState: ClientState) => {
@@ -159,14 +199,42 @@ export default function SessionLogs({ sessionId }: SessionLogsProps) {
   return (
     <div className="session-logs">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5>セッションログ ({totalCount}件)</h5>
-        <button 
-          className="btn btn-sm btn-outline-primary"
-          onClick={() => fetchLogs(clientState)}
-          disabled={loading}
-        >
-          {loading ? "更新中..." : "更新"}
-        </button>
+        <div className="d-flex align-items-center">
+          <h5 className="mb-0 me-3">セッションログ ({totalCount}件)</h5>
+          {sseConnected && (
+            <span className="badge bg-success me-2">
+              <i className="bi bi-broadcast me-1"></i>
+              リアルタイム接続中
+            </span>
+          )}
+          {sseError && (
+            <span className="badge bg-warning text-dark me-2" title={sseError}>
+              <i className="bi bi-exclamation-triangle me-1"></i>
+              接続エラー
+            </span>
+          )}
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <div className="form-check form-switch">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id="realTimeToggle"
+              checked={realTimeEnabled}
+              onChange={(e) => setRealTimeEnabled(e.target.checked)}
+            />
+            <label className="form-check-label small" htmlFor="realTimeToggle">
+              リアルタイム更新
+            </label>
+          </div>
+          <button 
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => fetchLogs(clientState)}
+            disabled={loading}
+          >
+            {loading ? "更新中..." : "更新"}
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

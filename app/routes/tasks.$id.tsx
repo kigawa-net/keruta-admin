@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
+import GitCommitFailures from "~/components/GitCommitFailures";
 import { getTask, deleteTask, getTaskLogs, getTaskLogCount, deleteTaskLogs } from "~/utils/api";
 import { useClient } from "~/components/Client";
+import { hasGitCommitFailures } from "~/utils/gitCommitLogs";
 import type { Task, TaskLog } from "~/types";
 
 export const meta: MetaFunction = () => {
@@ -73,7 +75,9 @@ export default function TaskDetails() {
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsError, setLogsError] = useState<string | null>(null);
   const [logFilter, setLogFilter] = useState<string>("");
-  const [showLogs, setShowLogs] = useState(false);
+  const [showLogs, setShowLogs] = useState(true);
+  const [showGitFailures, setShowGitFailures] = useState(false);
+  const [hasGitFailures, setHasGitFailures] = useState(false);
 
   // タスクデータを取得
   useEffect(() => {
@@ -85,6 +89,10 @@ export default function TaskDetails() {
         const data = await getTask(clientState, taskId!);
         setTask(data);
         setError(null);
+        
+        // Check for git commit failures
+        const gitFailures = await hasGitCommitFailures(clientState, taskId!);
+        setHasGitFailures(gitFailures);
       } catch (err) {
         console.error("タスクの取得に失敗しました:", err);
         setError("タスクの取得に失敗しました。");
@@ -126,6 +134,19 @@ export default function TaskDetails() {
       fetchLogs();
     }
   }, [showLogs, taskId, logFilter]);
+
+  // 常にログを自動更新
+  useEffect(() => {
+    if (!taskId) return;
+
+    const interval = setInterval(() => {
+      if (showLogs) {
+        fetchLogs();
+      }
+    }, 2000); // 2秒間隔で更新
+
+    return () => clearInterval(interval);
+  }, [taskId, showLogs, logFilter]);
 
   // タスク削除のハンドラ
   const handleDelete = async () => {
@@ -316,21 +337,40 @@ export default function TaskDetails() {
                 </div>
               )}
 
+              {hasGitFailures && (
+                <div className="mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="mb-0">
+                      <i className="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                      Git Commit失敗ログ
+                    </h6>
+                    <button
+                      className={`btn btn-sm ${showGitFailures ? "btn-outline-secondary" : "btn-outline-danger"}`}
+                      onClick={() => setShowGitFailures(!showGitFailures)}
+                    >
+                      {showGitFailures ? "Git失敗ログを非表示" : "Git失敗ログを表示"}
+                    </button>
+                  </div>
+
+                  {showGitFailures && (
+                    <GitCommitFailures 
+                      sessionId={task.sessionId} 
+                      taskId={taskId!} 
+                      showHeader={false} 
+                    />
+                  )}
+                </div>
+              )}
+
               <div className="mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h6 className="mb-0">
                     実行ログ
                     {logCount > 0 && <span className="badge bg-primary ms-2">{logCount}件</span>}
                   </h6>
-                  <button
-                    className={`btn btn-sm ${showLogs ? "btn-outline-secondary" : "btn-outline-primary"}`}
-                    onClick={() => setShowLogs(!showLogs)}
-                  >
-                    {showLogs ? "ログを非表示" : "ログを表示"}
-                  </button>
                 </div>
 
-                {showLogs && (
+                <div>
                   <div>
                     <div className="row mb-3">
                       <div className="col-md-4">
@@ -415,7 +455,7 @@ export default function TaskDetails() {
                       </div>
                     )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

@@ -224,7 +224,7 @@ export default function WorkspacesIndex() {
                       </tr>
                     </thead>
                     <tbody>
-                      {workspaces.map((workspace) => (
+                      {workspaces.slice().reverse().map((workspace) => (
                         <tr key={workspace.id}>
                           <td>
                             <Link

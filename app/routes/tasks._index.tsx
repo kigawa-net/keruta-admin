@@ -211,7 +211,7 @@ export default function Tasks() {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {tasks.map((task) => (
+                                    {tasks.slice().reverse().map((task) => (
                                         <tr key={task.id}>
                                             <td><strong>{task.title}</strong></td>
                                             <td>

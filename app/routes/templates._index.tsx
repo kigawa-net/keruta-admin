@@ -122,7 +122,7 @@ export default function Templates() {
                   </tr>
                 </thead>
                 <tbody>
-                  {templates.map((template) => (
+                  {templates.slice().reverse().map((template) => (
                     <tr key={template.id}>
                       <td>
                         <strong>{template.name}</strong>

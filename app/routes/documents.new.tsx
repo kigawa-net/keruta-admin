@@ -70,6 +70,15 @@ export default function NewDocument() {
   const [content, setContent] = useState(actionData?.values?.content || "");
   const [tagsString, setTagsString] = useState(actionData?.values?.tagsString || "");
 
+  // キーボードショートカットハンドラ
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      form.requestSubmit();
+    }
+  };
+
   return (
     <Layout>
       <div className="new-document">
@@ -78,7 +87,7 @@ export default function NewDocument() {
 
         <div className="card">
           <div className="card-body">
-            <Form method="post">
+            <Form method="post" onKeyDown={handleKeyDown}>
               <div className="mb-3">
                 <label htmlFor="title" className="form-label">タイトル</label>
                 <input

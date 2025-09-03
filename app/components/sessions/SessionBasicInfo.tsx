@@ -6,13 +6,21 @@ interface SessionBasicInfoProps {
 }
 
 export default function SessionBasicInfo({ onSubmit, loading, error, children }: SessionBasicInfoProps) {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      form.requestSubmit();
+    }
+  };
+
   return (
     <div className="card">
       <div className="card-header">
         <h5 className="card-title">セッション情報</h5>
       </div>
       <div className="card-body">
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} onKeyDown={handleKeyDown}>
           <div className="mb-3">
             <label htmlFor="name" className="form-label">
               セッション名 <span className="text-danger">*</span>

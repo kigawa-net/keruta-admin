@@ -199,7 +199,7 @@ export default function Documents() {
               <div className="card-body">
                 {filteredDocuments.length > 0 ? (
                   <div className="list-group">
-                    {filteredDocuments.map(doc => (
+                    {filteredDocuments.slice().reverse().map(doc => (
                       <div className="list-group-item list-group-item-action" key={doc.id}>
                         <div className="d-flex w-100 justify-content-between">
                           <h5 className="mb-1">{doc.title}</h5>

@@ -45,6 +45,15 @@ export default function NewTask() {
     fetchSessions();
   }, [clientState]);
 
+  // キーボードショートカットハンドラ
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      form.requestSubmit();
+    }
+  };
+
   // フォーム送信ハンドラ
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -93,7 +102,7 @@ export default function NewTask() {
               </div>
             )}
 
-            <Form method="post" onSubmit={handleSubmit}>
+            <Form method="post" onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
               <div className="mb-3">
                 <label htmlFor="title" className="form-label">タイトル</label>
                 <input

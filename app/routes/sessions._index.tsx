@@ -246,7 +246,7 @@ export default function Sessions() {
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        {sessions.map((session) => (
+                                        {sessions.slice().reverse().map((session) => (
                                             <tr key={session.id}>
                                                 <td><strong>{session.name}</strong></td>
                                                 <td>{session.description || "なし"}</td>
@@ -340,7 +340,7 @@ export default function Sessions() {
 
                                 {/* Mobile Card View */}
                                 <div className="d-lg-none">
-                                    {sessions.map((session) => (
+                                    {sessions.slice().reverse().map((session) => (
                                         <div key={session.id} className="card mb-3">
                                             <div className="card-body">
                                                 <div className="d-flex justify-content-between align-items-start mb-2">
