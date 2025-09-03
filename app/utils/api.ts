@@ -266,8 +266,16 @@ export async function getTask(clientState: ClientState, taskId: string): Promise
     return apiGet<Task>(clientState, `tasks/${taskId}`);
 }
 
-export async function createTask(clientState: ClientState, taskData: {sessionId: string, name: string, description?: string, script?: string}): Promise<Task> {
-    return apiPost<Task, {sessionId: string, name: string, description?: string, script?: string}>(clientState, "tasks", taskData);
+export async function createTask(clientState: ClientState, taskData: {sessionId: string, name: string, description?: string, script?: string, parentTaskId?: string}): Promise<Task> {
+    return apiPost<Task, {sessionId: string, name: string, description?: string, script?: string, parentTaskId?: string}>(clientState, "tasks", taskData);
+}
+
+export async function createSubTask(clientState: ClientState, parentTaskId: string, subTaskData: {name: string, description?: string, script?: string, inheritLogs?: boolean}): Promise<Task> {
+    return apiPost<Task, {name: string, description?: string, script?: string, inheritLogs?: boolean}>(clientState, `tasks/${parentTaskId}/subtasks`, subTaskData);
+}
+
+export async function getSubTasks(clientState: ClientState, parentTaskId: string): Promise<Task[]> {
+    return apiGet<Task[]>(clientState, `tasks/${parentTaskId}/subtasks`);
 }
 
 export async function updateTask(clientState: ClientState, taskId: string, taskData: Partial<Task>): Promise<Task> {

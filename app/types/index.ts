@@ -144,6 +144,7 @@ export interface WorkspaceTemplate {
 export interface Task {
   id: string;
   sessionId: string;
+  parentTaskId?: string | null;
   name: string;
   description: string;
   script: string;
@@ -154,6 +155,7 @@ export interface Task {
   parameters: Record<string, any>;
   createdAt: string;
   updatedAt: string;
+  subTasks?: Task[];
 }
 
 // Task Log Types

@@ -3,7 +3,7 @@ import type { MetaFunction } from "@remix-run/node";
 import { useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
 import GitCommitFailures from "~/components/GitCommitFailures";
-import { getTask, deleteTask, getTaskLogs, getTaskLogCount, deleteTaskLogs, pauseTask, resumeTask } from "~/utils/api";
+import { getTask, deleteTask, getTaskLogs, getTaskLogCount, deleteTaskLogs, pauseTask, resumeTask, createSubTask, getSubTasks } from "~/utils/api";
 import { useClient } from "~/components/Client";
 import { hasGitCommitFailures } from "~/utils/gitCommitLogs";
 import type { Task, TaskLog } from "~/types";
@@ -71,6 +71,14 @@ export default function TaskDetails() {
   const [showGitFailures, setShowGitFailures] = useState(false);
   const [hasGitFailures, setHasGitFailures] = useState(false);
   const [autoUpdateLogs, setAutoUpdateLogs] = useState(true);
+  const [subTasks, setSubTasks] = useState<Task[]>([]);
+  const [showCreateSubTask, setShowCreateSubTask] = useState(false);
+  const [subTaskForm, setSubTaskForm] = useState({
+    name: "",
+    description: "",
+    script: "",
+    inheritLogs: false
+  });
 
   // タスクデータを取得
   useEffect(() => {
@@ -86,6 +94,14 @@ export default function TaskDetails() {
         // Check for git commit failures
         const gitFailures = await hasGitCommitFailures(clientState, taskId!);
         setHasGitFailures(gitFailures);
+
+        // Fetch subtasks
+        try {
+          const subTasksData = await getSubTasks(clientState, taskId!);
+          setSubTasks(subTasksData);
+        } catch (err) {
+          console.warn("サブタスクの取得に失敗しました:", err);
+        }
       } catch (err) {
         console.error("タスクの取得に失敗しました:", err);
         setError("タスクの取得に失敗しました。");
@@ -188,6 +204,28 @@ export default function TaskDetails() {
     }
   };
 
+  // サブタスク作成のハンドラ
+  const handleCreateSubTask = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!task || !taskId) return;
+    if (clientState.state === "loading") return;
+
+    try {
+      const newSubTask = await createSubTask(clientState, taskId, {
+        name: subTaskForm.name,
+        description: subTaskForm.description || undefined,
+        script: subTaskForm.script || undefined,
+        inheritLogs: subTaskForm.inheritLogs
+      });
+
+      setSubTasks([...subTasks, newSubTask]);
+      setSubTaskForm({ name: "", description: "", script: "", inheritLogs: false });
+      setShowCreateSubTask(false);
+    } catch (err) {
+      console.error("サブタスクの作成に失敗しました:", err);
+    }
+  };
+
   return (
     <Layout>
       <div className="task-details">
@@ -208,6 +246,9 @@ export default function TaskDetails() {
                 再開
               </button>
             )}
+            <button className="btn btn-outline-success me-2" onClick={() => setShowCreateSubTask(!showCreateSubTask)}>
+              {showCreateSubTask ? "キャンセル" : "サブタスク作成"}
+            </button>
             <button className="btn btn-outline-primary me-2" onClick={handleEdit}>
               編集
             </button>
@@ -242,7 +283,10 @@ export default function TaskDetails() {
           <div className="card">
             <div className="card-header">
               <h5 className="card-title d-flex justify-content-between align-items-center">
-                <span>{task.name}</span>
+                <span>
+                  {task.parentTaskId && <span className="text-muted me-2">[サブタスク]</span>}
+                  {task.name}
+                </span>
                 <span className={`badge ${getStatusBadgeClass(task.status)}`}>
                   {task.status}
                 </span>
@@ -302,6 +346,20 @@ export default function TaskDetails() {
                           </button>
                         </td>
                       </tr>
+                      {task.parentTaskId && (
+                        <tr>
+                          <th scope="row">親タスク</th>
+                          <td>
+                            <button
+                              className="btn btn-link p-0 text-start"
+                              onClick={() => navigate(`/tasks/${task.parentTaskId}`)}
+                              title="親タスク詳細を表示"
+                            >
+                              {task.parentTaskId}
+                            </button>
+                          </td>
+                        </tr>
+                      )}
                       <tr>
                         <th scope="row">メッセージ</th>
                         <td>{task.message || "-"}</td>
@@ -363,6 +421,144 @@ export default function TaskDetails() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* サブタスク作成フォーム */}
+              {showCreateSubTask && (
+                <div className="mb-4">
+                  <h6>サブタスク作成</h6>
+                  <div className="card bg-light">
+                    <div className="card-body">
+                      <form onSubmit={handleCreateSubTask}>
+                        <div className="mb-3">
+                          <label htmlFor="subtask-name" className="form-label">タイトル <span className="text-danger">*</span></label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            id="subtask-name"
+                            value={subTaskForm.name}
+                            onChange={(e) => setSubTaskForm({...subTaskForm, name: e.target.value})}
+                            placeholder={`${task.name} - サブタスク`}
+                            required
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="subtask-description" className="form-label">説明</label>
+                          <textarea
+                            className="form-control"
+                            id="subtask-description"
+                            value={subTaskForm.description}
+                            onChange={(e) => setSubTaskForm({...subTaskForm, description: e.target.value})}
+                            placeholder={`親タスクからの継承: ${task.description || '説明なし'}`}
+                            rows={3}
+                          />
+                          <small className="form-text text-muted">
+                            空の場合、親タスクの説明が継承されます
+                          </small>
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="subtask-script" className="form-label">スクリプト</label>
+                          <textarea
+                            className="form-control"
+                            id="subtask-script"
+                            value={subTaskForm.script}
+                            onChange={(e) => setSubTaskForm({...subTaskForm, script: e.target.value})}
+                            placeholder={task.script || 'スクリプトなし'}
+                            rows={5}
+                          />
+                          <small className="form-text text-muted">
+                            空の場合、親タスクのスクリプトが継承されます
+                          </small>
+                        </div>
+                        <div className="mb-3">
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="inherit-logs"
+                              checked={subTaskForm.inheritLogs}
+                              onChange={(e) => setSubTaskForm({...subTaskForm, inheritLogs: e.target.checked})}
+                            />
+                            <label className="form-check-label" htmlFor="inherit-logs">
+                              親タスクのログを継承する
+                            </label>
+                          </div>
+                        </div>
+                        <div className="d-flex justify-content-end">
+                          <button type="button" className="btn btn-secondary me-2" onClick={() => setShowCreateSubTask(false)}>
+                            キャンセル
+                          </button>
+                          <button type="submit" className="btn btn-success">
+                            サブタスク作成
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* サブタスク一覧 */}
+              {subTasks.length > 0 && (
+                <div className="mb-4">
+                  <h6>サブタスク <span className="badge bg-primary">{subTasks.length}個</span></h6>
+                  <div className="table-responsive">
+                    <table className="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>タイトル</th>
+                          <th>ステータス</th>
+                          <th>進行状況</th>
+                          <th>作成日時</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {subTasks.map((subTask) => (
+                          <tr key={subTask.id}>
+                            <td>
+                              <button
+                                className="btn btn-link p-0 text-start"
+                                onClick={() => navigate(`/tasks/${subTask.id}`)}
+                                title="サブタスク詳細を表示"
+                              >
+                                {subTask.name}
+                              </button>
+                            </td>
+                            <td>
+                              <span className={`badge ${getStatusBadgeClass(subTask.status)}`}>
+                                {subTask.status}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="progress" style={{width: '80px', height: '20px'}}>
+                                <div
+                                  className="progress-bar"
+                                  role="progressbar"
+                                  style={{width: `${subTask.progress}%`}}
+                                  aria-valuenow={subTask.progress}
+                                  aria-valuemin={0}
+                                  aria-valuemax={100}
+                                >
+                                  {subTask.progress}%
+                                </div>
+                              </div>
+                            </td>
+                            <td>{formatDate(subTask.createdAt)}</td>
+                            <td>
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => navigate(`/tasks/${subTask.id}`)}
+                              >
+                                詳細
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
