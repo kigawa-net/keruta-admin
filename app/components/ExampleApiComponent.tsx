@@ -19,24 +19,24 @@ export default function ExampleApiComponent() {
     const [error, setError] = useState<string | null>(null);
     const clientState = useClient()
 
+    const fetchData = async () => {
+        if (clientState.state == "loading") return
+        try {
+            setLoading(true);
+            // Use the apiGet function from the API utility
+            const result = await apiGet<ExampleData[]>(clientState, 'examples');
+            setData(result);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            setError('データの取得中にエラーが発生しました。');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         // Fetch data from the backend when the component mounts
-        const fetchData = async () => {
-            if (clientState.state == "loading") return
-            try {
-                setLoading(true);
-                // Use the apiGet function from the API utility
-                const result = await apiGet<ExampleData[]>(clientState, 'examples');
-                setData(result);
-                setError(null);
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                setError('データの取得中にエラーが発生しました。');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchData();
     }, [clientState.state == "loading"]);
 
@@ -49,6 +49,15 @@ export default function ExampleApiComponent() {
             {error && (
                 <div className="text-danger mb-3">
                     {error}
+                    <div className="mt-2">
+                        <button 
+                            className="btn btn-outline-primary btn-sm" 
+                            onClick={fetchData}
+                            disabled={loading}
+                        >
+                            リトライ
+                        </button>
+                    </div>
                 </div>
             )}
 
