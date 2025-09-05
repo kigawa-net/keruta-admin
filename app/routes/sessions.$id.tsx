@@ -4,9 +4,10 @@ import { useNavigate, useParams } from "@remix-run/react";
 import Layout from "~/components/Layout";
 import SessionLogs from "~/components/sessions/SessionLogs";
 import GitCommitFailures from "~/components/GitCommitFailures";
+import Pagination from "~/components/Pagination";
 import { getSession, deleteSession, apiGet, createTask, getWorkspaces, startWorkspace, stopWorkspace } from "~/utils/api";
 import { useClient, ClientState } from "~/components/Client";
-import { Session, Workspace } from "~/types";
+import { Session, Workspace, Task } from "~/types";
 import { formatDate } from "~/utils/dateUtils";
 
 export const meta: MetaFunction = () => {
@@ -17,15 +18,7 @@ export const meta: MetaFunction = () => {
 };
 
 // Remove local Session interface - using the one from types
-
-// タスクデータの型定義
-interface Task {
-  id: string;
-  title: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Remove local Task interface - using the one from types
 
 // ステータスに応じたバッジのスタイルを返す関数
 function getStatusBadgeClass(status: string): string {
@@ -70,6 +63,10 @@ export default function SessionDetails() {
     script: ""
   });
   const [taskCreating, setTaskCreating] = useState(false);
+
+  // タスクのページング関連の状態
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // 1ページあたりの表示件数
 
   // セッション情報を取得
   const fetchSession = async (clientState: ClientState) => {
@@ -213,6 +210,9 @@ export default function SessionDetails() {
 
       // タスク一覧を再取得
       await fetchSessionTasks(clientState);
+      
+      // 新しいタスクが作成されたら1ページ目に戻る
+      setCurrentPage(1);
     } catch (err) {
       console.error("タスクの作成に失敗しました:", err);
       setError("タスクの作成に失敗しました。");
@@ -230,15 +230,32 @@ export default function SessionDetails() {
     });
   };
 
-  // キーボードイベントハンドラ（Ctrl+Enter でタスク作成）
+  // キーボードイベントハンドラ（Ctrl+Enter または Cmd+Enter でタスク作成）
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.ctrlKey && e.key === 'Enter') {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       if (!taskCreating && taskFormData.name.trim()) {
         handleCreateTask();
       }
     }
   };
+
+  // ページング関連のロジック
+  const totalPages = Math.ceil(tasks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTasks = tasks.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // タスク一覧が変更されたときに現在のページを調整
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [tasks.length, totalPages, currentPage]);
 
   if (loading) {
     return (
@@ -583,7 +600,7 @@ export default function SessionDetails() {
           <div className="card-body">
             {/* タスク作成フォーム */}
             <div className="border rounded p-3 mb-3 bg-light" onKeyDown={handleKeyDown}>
-              <h6 className="mb-3">新しいタスクを作成 <small className="text-muted">(Ctrl+Enterで作成)</small></h6>
+              <h6 className="mb-3">新しいタスクを作成 <small className="text-muted">(Ctrl+Enter / Cmd+Enterで作成)</small></h6>
               <div className="row">
                 <div className="col-md-6">
                   <div className="mb-3">
@@ -664,41 +681,50 @@ export default function SessionDetails() {
                 <span className="ms-2">関連タスクを読み込んでいます...</span>
               </div>
             ) : tasks.length > 0 ? (
-              <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                  <thead>
-                    <tr>
-                      <th>タイトル</th>
-                      <th>ステータス</th>
-                      <th>作成日時</th>
-                      <th>更新日時</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tasks.map((task) => (
-                      <tr key={task.id}>
-                        <td>{task.title}</td>
-                        <td>
-                          <span className={`badge ${getStatusBadgeClass(task.status)}`}>
-                            {task.status}
-                          </span>
-                        </td>
-                        <td>{formatDate(task.createdAt)}</td>
-                        <td>{formatDate(task.updatedAt)}</td>
-                        <td>
-                          <button
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => navigate(`/tasks/${task.id}`)}
-                          >
-                            詳細
-                          </button>
-                        </td>
+              <>
+                <div className="table-responsive">
+                  <table className="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>名前</th>
+                        <th>ステータス</th>
+                        <th>作成日時</th>
+                        <th>更新日時</th>
+                        <th>操作</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {currentTasks.map((task) => (
+                        <tr key={task.id}>
+                          <td>{task.name}</td>
+                          <td>
+                            <span className={`badge ${getStatusBadgeClass(task.status)}`}>
+                              {task.status}
+                            </span>
+                          </td>
+                          <td>{formatDate(task.createdAt)}</td>
+                          <td>{formatDate(task.updatedAt)}</td>
+                          <td>
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => navigate(`/tasks/${task.id}`)}
+                            >
+                              詳細
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={tasks.length}
+                />
+              </>
             ) : (
               <p className="text-muted">このセッションに関連するタスクはありません。</p>
             )}
