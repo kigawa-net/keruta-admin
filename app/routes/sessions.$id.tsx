@@ -55,7 +55,7 @@ export default function SessionDetails() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [workspacesLoading, setWorkspacesLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  
+
   // タスク作成フォーム関連の状態
   const [taskFormData, setTaskFormData] = useState({
     name: "",
@@ -92,7 +92,7 @@ export default function SessionDetails() {
     try {
       setTasksLoading(true);
       const data = await apiGet<Task[]>(clientState, `tasks/session/${id}`);
-      setTasks(data);
+      setTasks(data.reverse());
     } catch (err) {
       console.error("関連タスクの取得に失敗しました:", err);
       // タスクの取得に失敗してもエラーにはしない（セッション情報は表示する）
@@ -210,7 +210,7 @@ export default function SessionDetails() {
 
       // タスク一覧を再取得
       await fetchSessionTasks(clientState);
-      
+
       // 新しいタスクが作成されたら1ページ目に戻る
       setCurrentPage(1);
     } catch (err) {

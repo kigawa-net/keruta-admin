@@ -72,6 +72,8 @@ export default function TaskDetails() {
   const [hasGitFailures, setHasGitFailures] = useState(false);
   const [autoUpdateLogs, setAutoUpdateLogs] = useState(true);
   const [subTasks, setSubTasks] = useState<Task[]>([]);
+  const [parentTask, setParentTask] = useState<Task | null>(null);
+  const [parentTaskLoading, setParentTaskLoading] = useState(false);
   const [showCreateSubTask, setShowCreateSubTask] = useState(false);
   const [subTaskForm, setSubTaskForm] = useState({
     name: "",
@@ -101,6 +103,19 @@ export default function TaskDetails() {
           setSubTasks(subTasksData);
         } catch (err) {
           console.warn("サブタスクの取得に失敗しました:", err);
+        }
+
+        // Fetch parent task if exists
+        if (data.parentTaskId) {
+          try {
+            setParentTaskLoading(true);
+            const parentTaskData = await getTask(clientState, data.parentTaskId);
+            setParentTask(parentTaskData);
+          } catch (err) {
+            console.warn("親タスクの取得に失敗しました:", err);
+          } finally {
+            setParentTaskLoading(false);
+          }
         }
       } catch (err) {
         console.error("タスクの取得に失敗しました:", err);
@@ -243,10 +258,43 @@ export default function TaskDetails() {
       <div className="task-details">
         <h2>タスク詳細</h2>
 
+        {/* ブレッドクラム */}
+        <div className="mb-3">
+          <nav aria-label="breadcrumb">
+            <ol className="breadcrumb">
+              <li className="breadcrumb-item">
+                <button className="btn btn-link p-0" onClick={() => navigate("/tasks")}>
+                  <i className="bi bi-list-task me-1"></i>タスク一覧
+                </button>
+              </li>
+              {task && parentTask && (
+                <li className="breadcrumb-item">
+                  <button 
+                    className="btn btn-link p-0" 
+                    onClick={() => navigate(`/tasks/${parentTask.id}`)}
+                  >
+                    <i className="bi bi-arrow-up-circle me-1"></i>{parentTask.name}
+                  </button>
+                </li>
+              )}
+              <li className="breadcrumb-item active" aria-current="page">
+                {task ? task.name : "タスク詳細"}
+              </li>
+            </ol>
+          </nav>
+        </div>
+
         <div className="d-flex justify-content-between mb-3">
-          <button className="btn btn-outline-secondary" onClick={() => navigate("/tasks")}>
-            ← タスク一覧に戻る
-          </button>
+          <div className="d-flex gap-2">
+            <button className="btn btn-outline-secondary" onClick={() => navigate("/tasks")}>
+              ← タスク一覧に戻る
+            </button>
+            {task && parentTask && (
+              <button className="btn btn-outline-info" onClick={() => navigate(`/tasks/${parentTask.id}`)}>
+                ↑ 親タスク「{parentTask.name}」に戻る
+              </button>
+            )}
+          </div>
           <div>
             {task && task.status.toUpperCase() === 'RUNNING' && (
               <button className="btn btn-outline-warning me-2" onClick={handlePause}>
@@ -362,13 +410,29 @@ export default function TaskDetails() {
                         <tr>
                           <th scope="row">親タスク</th>
                           <td>
-                            <button
-                              className="btn btn-link p-0 text-start"
-                              onClick={() => navigate(`/tasks/${task.parentTaskId}`)}
-                              title="親タスク詳細を表示"
-                            >
-                              {task.parentTaskId}
-                            </button>
+                            <div className="d-flex align-items-center">
+                              <button
+                                className="btn btn-link p-0 text-start me-2"
+                                onClick={() => navigate(`/tasks/${task.parentTaskId}`)}
+                                title="親タスク詳細を表示"
+                              >
+                                <i className="bi bi-box-arrow-up-right me-1"></i>
+                                {parentTaskLoading ? (
+                                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                ) : null}
+                                {parentTask ? parentTask.name : task.parentTaskId}
+                              </button>
+                              {parentTask && (
+                                <span className={`badge ${getStatusBadgeClass(parentTask.status)} ms-2`}>
+                                  {parentTask.status}
+                                </span>
+                              )}
+                            </div>
+                            {parentTask && (
+                              <small className="text-muted d-block mt-1">
+                                進行状況: {parentTask.progress}% | 更新: {formatDate(parentTask.updatedAt)}
+                              </small>
+                            )}
                           </td>
                         </tr>
                       )}

@@ -21,7 +21,7 @@ const Pagination: React.FC<PaginationProps> = ({
   const generatePageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       // Show all pages if total pages is small
       for (let i = 1; i <= totalPages; i++) {
@@ -54,7 +54,7 @@ const Pagination: React.FC<PaginationProps> = ({
         pages.push(totalPages);
       }
     }
-    
+
     return pages;
   };
 
