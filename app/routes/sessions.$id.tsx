@@ -92,6 +92,7 @@ export default function SessionDetails() {
     try {
       setTasksLoading(true);
       const data = await apiGet<Task[]>(clientState, `tasks/session/${id}`);
+      data.reverse()
       setTasks(data.reverse());
     } catch (err) {
       console.error("関連タスクの取得に失敗しました:", err);
