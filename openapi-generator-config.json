@@ -1,0 +1,10 @@
+{
+  "client": {
+    "name": "fetch"
+  },
+  "types": {
+    "dates": "string",
+    "enums": "union"
+  },
+  "schemas": false
+}
