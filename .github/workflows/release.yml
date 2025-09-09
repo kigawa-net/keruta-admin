@@ -2,10 +2,19 @@ name: release.yml
 on:
   workflow_call:
     inputs:
-      conf:
+      name:
         description: 'docker image name'
         required: true
-        type: object
+        type: string
+      harborProject:
+        required: true
+        type: string
+      manifestFile:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
 
 
 jobs:
@@ -15,8 +24,8 @@ jobs:
       harborUser: robot$kigawa-net
       dir: "./"
       dockerFile: "./Dockerfile"
-      name: ${{ inputs.conf.name }}
-      dockerRepository: harbor.kigawa.net/${{ inputs.conf.harborProject }}
+      name: ${{ inputs.name }}
+      dockerRepository: harbor.kigawa.net/${{ inputs.harborProject }}
     steps:
       # checkout
       - uses: actions/checkout@v4
@@ -56,14 +65,14 @@ jobs:
       - name: checkout manifest repository
         uses: actions/checkout@v3
         with:
-          repository: ${{ inputs.conf.repository }}
+          repository: ${{ inputs.repository }}
           ref: main
           token: ${{ secrets.GIT_TOKEN }}
 
       - name: Update YAML File
         run: |
-          yq -i '.spec.template.spec.containers[0].image = "harbor.kigawa.net/library/${{ inputs.conf.name }}:${{ github.ref_name }}-${{ github.sha }}"' \
-          ${{ inputs.conf.manifestFile }}
+          yq -i '.spec.template.spec.containers[0].image = "harbor.kigawa.net/library/${{ inputs.name }}:${{ github.ref_name }}-${{ github.sha }}"' \
+          ${{ inputs.manifestFile }}
 
       - name: push
         run: |

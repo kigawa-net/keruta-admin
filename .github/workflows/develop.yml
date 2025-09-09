@@ -1,0 +1,13 @@
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  cd:
+    uses: ./.github/workflows/release.yml
+    with:
+        name: keruta-admin
+        manifestFile: ./keruta/dev/keruta-admin.yaml
+        harborProject: "library"
+        repository: "kigawa-net/kigawa-net-k8s"
