@@ -11,3 +11,4 @@ jobs:
         manifestFile: ./keruta/dev/keruta-admin.yaml
         harborProject: "library"
         repository: "kigawa-net/kigawa-net-k8s"
+        dockerPass: ${{ secrets.HARBOR_PASS }}
