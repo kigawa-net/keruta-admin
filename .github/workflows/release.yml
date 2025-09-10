@@ -15,6 +15,12 @@ on:
       repository:
         required: true
         type: string
+    secrets:
+      HARBOR_PASS:
+        required: true
+      GIT_TOKEN:
+        required: true
+
 
 
 jobs:
