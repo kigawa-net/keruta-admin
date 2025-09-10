@@ -59,41 +59,35 @@ export default function TemplateSelector({
           ) : (
             <>
               <div className="mb-3">
-                <label htmlFor="templateSelect" className="form-label">
-                  テンプレート <span className="text-danger">*</span>
+                <label className="form-label">
+                  テンプレート（固定）
                 </label>
-                <select
-                  className="form-select"
-                  id="templateSelect"
-                  value={selectedTemplateId}
-                  onChange={(e) => onTemplateSelect(e.target.value)}
-                  required
-                >
-                  <option value="">テンプレートを選択してください</option>
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.displayName} - {template.description}
-                    </option>
-                  ))}
-                </select>
-                {templates.length === 0 && (
-                  <div className="form-text text-warning">
-                    利用可能なテンプレートがありません。管理者にお問い合わせください。
+                {templates.length > 0 ? (
+                  <div className="alert alert-info mb-0">
+                    <div className="d-flex align-items-center">
+                      <i className="bi bi-info-circle me-2"></i>
+                      <div>
+                        <strong>使用テンプレート:</strong> {templates[0].displayName}<br/>
+                        <small className="text-muted">ID: {templates[0].id}</small><br/>
+                        <small className="text-muted">説明: {templates[0].description}</small>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="alert alert-warning mb-0">
+                    <div className="d-flex align-items-center">
+                      <i className="bi bi-exclamation-triangle me-2"></i>
+                      <div>
+                        環境変数CODER_TEMPLATE_IDで指定されたテンプレートが見つかりません。<br/>
+                        管理者にお問い合わせください。
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {selectedTemplateId && (
+              {templates.length > 0 && (
                 <>
-                  <div className="alert alert-info mb-3">
-                    <div className="d-flex align-items-center">
-                      <i className="bi bi-info-circle me-2"></i>
-                      <div>
-                        <strong>選択されたテンプレート:</strong> {templateConfig.templateName}<br/>
-                        <small className="text-muted">ID: {templateConfig.templateId}</small>
-                      </div>
-                    </div>
-                  </div>
 
                   <div className="mb-3">
                     <label htmlFor="templatePath" className="form-label">テンプレートパス</label>

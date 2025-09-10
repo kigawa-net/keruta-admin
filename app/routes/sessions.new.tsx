@@ -56,15 +56,15 @@ export default function NewSession() {
         console.log("Templates:", templatesData);
         setTemplates(templatesData);
 
-        // Set default template if available
-        const defaultTemplate = templatesData.find(t => !(t as any).deprecated);
-        if (defaultTemplate) {
-          setSelectedTemplateId(defaultTemplate.id);
+        // Set fixed template (first template is the only allowed one from backend)
+        if (templatesData.length > 0) {
+          const fixedTemplate = templatesData[0];
+          setSelectedTemplateId(fixedTemplate.id);
           setTemplateConfig(prev => ({
             ...prev,
-            templateId: defaultTemplate.id,
-            templateName: defaultTemplate.displayName,
-            templatePath: `/templates/${defaultTemplate.name}`
+            templateId: fixedTemplate.id,
+            templateName: fixedTemplate.displayName,
+            templatePath: `/templates/${fixedTemplate.name}`
           }));
         }
       } catch (error) {
@@ -77,19 +77,9 @@ export default function NewSession() {
     loadTemplates();
   }, [clientState]);
 
-  // Template selection handler
-  const handleTemplateSelect = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
-    setSelectedTemplateId(templateId);
-
-    if (template) {
-      setTemplateConfig(prev => ({
-        ...prev,
-        templateId: template.id,
-        templateName: template.displayName,
-        templatePath: `/templates/${template.name}`
-      }));
-    }
+  // Fixed template handler (no selection needed)
+  const handleTemplateSelect = () => {
+    // Template selection is disabled - using fixed template
   };
 
 
@@ -110,7 +100,7 @@ export default function NewSession() {
       status: formData.get("status") as string || "ACTIVE",
       tags: tags,
       repositoryRef: "main",
-      templateConfig: selectedTemplateId ? templateConfig : undefined,
+      templateConfig: templates.length > 0 ? templateConfig : undefined,
     };
 
     try {
