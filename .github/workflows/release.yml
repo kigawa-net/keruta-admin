@@ -15,9 +15,6 @@ on:
       repository:
         required: true
         type: string
-      dockerPass:
-        required: true
-        type: string
 
 
 jobs:
@@ -40,7 +37,7 @@ jobs:
         with:
           registry: harbor.kigawa.net
           username: ${{ env.harborUser }}
-          password: ${{ inputs.dockerPass }}
+          password: ${{ secrets.HARBOR_PASS }}
 
       - name: Docker meta
         id: meta
