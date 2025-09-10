@@ -16,9 +16,9 @@ on:
         required: true
         type: string
     secrets:
-      HARBOR_PASS:
+      harborPass:
         required: true
-      GIT_TOKEN:
+      gitToken:
         required: true
 
 
@@ -43,7 +43,7 @@ jobs:
         with:
           registry: harbor.kigawa.net
           username: ${{ env.harborUser }}
-          password: ${{ secrets.HARBOR_PASS }}
+          password: ${{ secrets.harborPass }}
 
       - name: Docker meta
         id: meta
@@ -73,7 +73,7 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
           ref: main
-          token: ${{ secrets.GIT_TOKEN }}
+          token: ${{ secrets.gitToken }}
 
       - name: Update YAML File
         run: |
