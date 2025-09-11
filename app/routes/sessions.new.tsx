@@ -22,9 +22,9 @@ export default function NewSession() {
   const [error, setError] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
 
-  // Template configuration uses fixed values from environment
+  // Template configuration uses fixed values (managed by backend environment variables)
   const [templateConfig] = useState<SessionTemplateConfig>({
-    templateId: process.env.CODER_TEMPLATE_ID || "keruta-ubuntu-22.04",
+    templateId: "keruta-ubuntu-22.04", // Fixed template ID - managed by backend CODER_TEMPLATE_ID
     templateName: "Keruta Ubuntu Environment",
     templatePath: "/terraform-templates/coder-workspace",
     preferredKeywords: [],
