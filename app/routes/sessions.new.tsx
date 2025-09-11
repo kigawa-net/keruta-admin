@@ -1,13 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { MetaFunction } from "@remix-run/node";
 import { useNavigate } from "@remix-run/react";
 import Layout from "~/components/Layout";
-import { createSession, getCoderTemplates } from "~/utils/api";
+import { createSession } from "~/utils/api";
 import { useClient } from "~/components/Client";
-import { CoderTemplate, SessionTemplateConfig } from "~/types";
+import { SessionTemplateConfig } from "~/types";
 import SessionBasicInfo from "~/components/sessions/SessionBasicInfo";
 import TagManager from "~/components/sessions/TagManager";
-import TemplateSelector from "~/components/sessions/TemplateSelector";
 
 export const meta: MetaFunction = () => {
   return [
@@ -23,15 +22,10 @@ export default function NewSession() {
   const [error, setError] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
 
-  // Template state
-  const [templates, setTemplates] = useState<CoderTemplate[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const [templateLoading, setTemplateLoading] = useState(false);
-
-  // Session template configuration state
-  const [templateConfig, setTemplateConfig] = useState<SessionTemplateConfig>({
-    templateId: null,
-    templateName: null,
+  // Template configuration uses fixed values from environment
+  const [templateConfig] = useState<SessionTemplateConfig>({
+    templateId: process.env.CODER_TEMPLATE_ID || "keruta-ubuntu-22.04",
+    templateName: "Keruta Ubuntu Environment",
     templatePath: "/terraform-templates/coder-workspace",
     preferredKeywords: [],
     parameters: {
@@ -45,42 +39,6 @@ export default function NewSession() {
   });
 
 
-  // Load templates on component mount
-  useEffect(() => {
-    const loadTemplates = async () => {
-      if (clientState.state == "loading") return;
-
-      try {
-        setTemplateLoading(true);
-        const templatesData = await getCoderTemplates(clientState);
-        console.log("Templates:", templatesData);
-        setTemplates(templatesData);
-
-        // Set fixed template (first template is the only allowed one from backend)
-        if (templatesData.length > 0) {
-          const fixedTemplate = templatesData[0];
-          setSelectedTemplateId(fixedTemplate.id);
-          setTemplateConfig(prev => ({
-            ...prev,
-            templateId: fixedTemplate.id,
-            templateName: fixedTemplate.displayName,
-            templatePath: `/templates/${fixedTemplate.name}`
-          }));
-        }
-      } catch (error) {
-        console.error("Failed to load templates:", error);
-      } finally {
-        setTemplateLoading(false);
-      }
-    };
-
-    loadTemplates();
-  }, [clientState]);
-
-  // Fixed template handler (no selection needed)
-  const handleTemplateSelect = () => {
-    // Template selection is disabled - using fixed template
-  };
 
 
   // フォーム送信ハンドラ
@@ -100,7 +58,7 @@ export default function NewSession() {
       status: formData.get("status") as string || "ACTIVE",
       tags: tags,
       repositoryRef: "main",
-      templateConfig: templates.length > 0 ? templateConfig : undefined,
+      templateConfig: templateConfig,
     };
 
     try {
@@ -123,14 +81,18 @@ export default function NewSession() {
 
         <SessionBasicInfo onSubmit={handleSubmit} loading={loading} error={error}>
           <TagManager tags={tags} onTagsChange={setTags} />
-          <TemplateSelector
-            templates={templates}
-            templateLoading={templateLoading}
-            selectedTemplateId={selectedTemplateId}
-            templateConfig={templateConfig}
-            onTemplateSelect={handleTemplateSelect}
-            onTemplateConfigChange={setTemplateConfig}
-          />
+          
+          <div className="mb-3">
+            <div className="alert alert-info">
+              <div className="d-flex align-items-center">
+                <i className="bi bi-info-circle me-2"></i>
+                <div>
+                  <strong>ワークスペーステンプレート:</strong> 固定設定（{templateConfig.templateId}）<br/>
+                  <small className="text-muted">環境変数CODER_TEMPLATE_IDで管理されています</small>
+                </div>
+              </div>
+            </div>
+          </div>
         </SessionBasicInfo>
       </div>
     </Layout>
