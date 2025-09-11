@@ -4,7 +4,7 @@ on:
     inputs:
       name:
         description: 'docker image name'
-        required: true
+        required: false
         type: string
       harborProject:
         required: true
@@ -30,7 +30,7 @@ jobs:
       harborUser: robot$kigawa-net
       dir: "./"
       dockerFile: "./Dockerfile"
-      name: ${{ inputs.name }}
+      name: ${{ inputs.name || 'keruta-admin' }}
       dockerRepository: harbor.kigawa.net/${{ inputs.harborProject }}
     steps:
       # checkout
@@ -77,7 +77,7 @@ jobs:
 
       - name: Update YAML File
         run: |
-          yq -i '.spec.template.spec.containers[0].image = "harbor.kigawa.net/library/${{ inputs.name }}:${{ github.ref_name }}-${{ github.sha }}"' \
+          yq -i '.spec.template.spec.containers[0].image = "harbor.kigawa.net/library/${{ env.name }}:${{ github.ref_name }}-${{ github.sha }}"' \
           ${{ inputs.manifestFile }}
 
       - name: push
