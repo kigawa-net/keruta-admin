@@ -55,7 +55,7 @@ export default function NewSession() {
     const session = {
       name: formData.get("name") as string,
       description: (formData.get("description") as string) || undefined,
-      status: formData.get("status") as string || "ACTIVE",
+      status: "ACTIVE", // 新規作成時は常にACTIVE
       tags: tags,
       repositoryRef: "main",
       templateConfig: templateConfig,

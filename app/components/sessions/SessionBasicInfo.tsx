@@ -48,17 +48,6 @@ export default function SessionBasicInfo({ onSubmit, loading, error, children }:
             />
           </div>
 
-          <div className="mb-3">
-            <label htmlFor="status" className="form-label">
-              ステータス
-            </label>
-            <select className="form-select" id="status" name="status" defaultValue="ACTIVE">
-              <option value="ACTIVE">アクティブ</option>
-              <option value="INACTIVE">非アクティブ</option>
-              <option value="COMPLETED">完了</option>
-              <option value="ARCHIVED">アーカイブ済み</option>
-            </select>
-          </div>
 
           {children}
 
