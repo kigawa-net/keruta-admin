@@ -88,7 +88,12 @@ export function useManagementSSE({
   }, [onSessionUpdate, onSessionCreated, onSessionDeleted, onTaskUpdate, onTaskCreated, onTaskDeleted, onLogCreated, onSystemUpdate, onEvent]);
 
   const connect = useCallback(() => {
-    if (clientState.state === "loading" || !clientState.apiUrl || !realtimeEnabled) {
+    // Early return if realtime is disabled
+    if (!realtimeEnabled) {
+      return;
+    }
+
+    if (clientState.state === "loading" || !clientState.apiUrl) {
       return;
     }
 
