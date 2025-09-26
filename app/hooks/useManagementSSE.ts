@@ -192,25 +192,35 @@ export function useManagementSSE({
       });
 
       eventSource.onerror = (event) => {
-        console.error('Management SSE error:', event);
+        // Only log errors if realtime is enabled to avoid noise
+        if (realtimeEnabled) {
+          console.error('Management SSE error:', event);
+        }
         setConnected(false);
-        setError('Management SSE connection failed');
-        
-        // Attempt to reconnect
-        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-          reconnectAttemptsRef.current++;
-          
-          reconnectTimeoutRef.current = setTimeout(() => {
-            connect();
-          }, RECONNECT_INTERVAL);
-        } else {
-          setError(`Failed to connect after ${MAX_RECONNECT_ATTEMPTS} attempts`);
+
+        // Only set error and attempt reconnect if realtime is enabled
+        if (realtimeEnabled) {
+          setError('Management SSE connection failed');
+
+          // Attempt to reconnect
+          if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+            reconnectAttemptsRef.current++;
+
+            reconnectTimeoutRef.current = setTimeout(() => {
+              connect();
+            }, RECONNECT_INTERVAL);
+          } else {
+            setError(`Failed to connect after ${MAX_RECONNECT_ATTEMPTS} attempts`);
+          }
         }
       };
 
     } catch (err) {
-      console.error('Failed to create management SSE connection:', err);
-      setError('Failed to create management SSE connection');
+      // Only log and set errors if realtime is enabled
+      if (realtimeEnabled) {
+        console.error('Failed to create management SSE connection:', err);
+        setError('Failed to create management SSE connection');
+      }
     }
   }, [clientState, handleEvent, realtimeEnabled]);
 
