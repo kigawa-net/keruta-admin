@@ -294,7 +294,17 @@ export default function Index() {
         
         <div className="row">
           <div className="col-lg-6 mb-4">
-            <RealtimeSettings />
+            {/* RealtimeSettings disabled due to API connection issues */}
+            <div className="card">
+              <div className="card-header">
+                <h5 className="card-title">リアルタイム更新設定</h5>
+              </div>
+              <div className="card-body">
+                <div className="alert alert-info" role="alert">
+                  リアルタイム更新は現在無効になっています。
+                </div>
+              </div>
+            </div>
           </div>
           <div className="col-lg-6 mb-4">
             <div className="card">
