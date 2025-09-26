@@ -46,7 +46,7 @@ export default function Index() {
   // Real-time updates for dashboard
   const { connected, error: sseError, lastEventTime } = useManagementSSE({
     clientState,
-    realtimeEnabled,
+    realtimeEnabled: false, // Force disable for now
     onEvent: (event) => {
       // Add new activity to recent activities
       const newActivity = {

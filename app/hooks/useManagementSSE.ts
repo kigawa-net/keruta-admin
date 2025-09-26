@@ -245,10 +245,12 @@ export function useManagementSSE({
   }, []);
 
   useEffect(() => {
-    if (realtimeEnabled) {
+    // Always disconnect first
+    disconnect();
+
+    // Only connect if realtime is explicitly enabled
+    if (realtimeEnabled === true) {
       connect();
-    } else {
-      disconnect();
     }
 
     return () => {
