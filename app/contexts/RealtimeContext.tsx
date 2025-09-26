@@ -32,7 +32,7 @@ interface RealtimeProviderProps {
 export function RealtimeProvider({ children }: RealtimeProviderProps) {
   const [events, setEvents] = useState<ManagementSSEEvent[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<string>('');
-  const [realtimeEnabled, setRealtimeEnabled] = useState<boolean>(true);
+  const [realtimeEnabled, setRealtimeEnabled] = useState<boolean>(false);
   const clientState = useClient();
 
   const handleEvent = useCallback((event: ManagementSSEEvent) => {
