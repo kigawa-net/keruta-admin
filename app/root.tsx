@@ -6,6 +6,7 @@ import bootstrapStyles from "bootstrap/dist/css/bootstrap.min.css";
 import mobileStyles from "~/styles/mobile.css";
 
 import {ClientProvider, loadClientState, LoadedClientState} from "~/components/Client";
+import {RealtimeProvider} from "~/contexts/RealtimeContext";
 
 export const links: LinksFunction = () => [
     {rel: "stylesheet", href: bootstrapStyles},
@@ -17,9 +18,11 @@ function AppLayout() {
     const loaderData = useLoaderData<typeof loader>()
     return (
         <ClientProvider clientState={loaderData.clientState}>
-            <div className="min-vh-100">
-                <Outlet/>
-            </div>
+            <RealtimeProvider>
+                <div className="min-vh-100">
+                    <Outlet/>
+                </div>
+            </RealtimeProvider>
         </ClientProvider>
     );
 }
