@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { useClient } from '~/components/Client';
 import { useManagementSSE, ManagementSSEEvent } from '~/hooks/useManagementSSE';
+import { apiGet } from '~/utils/api';
 
 interface RealtimeContextValue {
   connected: boolean;
@@ -10,6 +11,8 @@ interface RealtimeContextValue {
   events: ManagementSSEEvent[];
   clearEvents: () => void;
   addCustomEvent: (event: ManagementSSEEvent) => void;
+  realtimeEnabled: boolean;
+  refreshRealtimeConfig: () => void;
 }
 
 const RealtimeContext = createContext<RealtimeContextValue | null>(null);
@@ -29,6 +32,7 @@ interface RealtimeProviderProps {
 export function RealtimeProvider({ children }: RealtimeProviderProps) {
   const [events, setEvents] = useState<ManagementSSEEvent[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<string>('');
+  const [realtimeEnabled, setRealtimeEnabled] = useState<boolean>(true);
   const clientState = useClient();
 
   const handleEvent = useCallback((event: ManagementSSEEvent) => {
@@ -38,7 +42,8 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
 
   const { connected, error, lastEventTime } = useManagementSSE({
     clientState,
-    onEvent: handleEvent
+    onEvent: handleEvent,
+    realtimeEnabled
   });
 
   const clearEvents = useCallback(() => {
@@ -49,6 +54,21 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     setEvents(prevEvents => [event, ...prevEvents.slice(0, 99)]);
   }, []);
 
+  const refreshRealtimeConfig = useCallback(async () => {
+    if (clientState.state === "loading") return;
+
+    try {
+      const config = await apiGet(clientState, "admin/api/realtime/config");
+      setRealtimeEnabled(config.enabled);
+    } catch (err) {
+      console.error("Failed to fetch realtime config:", err);
+    }
+  }, [clientState]);
+
+  useEffect(() => {
+    refreshRealtimeConfig();
+  }, [refreshRealtimeConfig]);
+
   const value: RealtimeContextValue = {
     connected,
     error,
@@ -56,7 +76,9 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     connectionStatus,
     events,
     clearEvents,
-    addCustomEvent
+    addCustomEvent,
+    realtimeEnabled,
+    refreshRealtimeConfig
   };
 
   return (

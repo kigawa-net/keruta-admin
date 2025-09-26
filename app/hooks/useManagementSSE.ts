@@ -21,6 +21,7 @@ export interface UseManagementSSEProps {
   onLogCreated?: (data: any) => void;
   onSystemUpdate?: (data: any) => void;
   onEvent?: (event: ManagementSSEEvent) => void;
+  realtimeEnabled?: boolean;
 }
 
 export function useManagementSSE({
@@ -33,7 +34,8 @@ export function useManagementSSE({
   onTaskDeleted,
   onLogCreated,
   onSystemUpdate,
-  onEvent
+  onEvent,
+  realtimeEnabled = true
 }: UseManagementSSEProps) {
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +88,7 @@ export function useManagementSSE({
   }, [onSessionUpdate, onSessionCreated, onSessionDeleted, onTaskUpdate, onTaskCreated, onTaskDeleted, onLogCreated, onSystemUpdate, onEvent]);
 
   const connect = useCallback(() => {
-    if (clientState.state === "loading" || !clientState.apiUrl) {
+    if (clientState.state === "loading" || !clientState.apiUrl || !realtimeEnabled) {
       return;
     }
 
@@ -210,7 +212,7 @@ export function useManagementSSE({
       console.error('Failed to create management SSE connection:', err);
       setError('Failed to create management SSE connection');
     }
-  }, [clientState, handleEvent]);
+  }, [clientState, handleEvent, realtimeEnabled]);
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -228,12 +230,16 @@ export function useManagementSSE({
   }, []);
 
   useEffect(() => {
-    connect();
-    
+    if (realtimeEnabled) {
+      connect();
+    } else {
+      disconnect();
+    }
+
     return () => {
       disconnect();
     };
-  }, [connect, disconnect]);
+  }, [connect, disconnect, realtimeEnabled]);
 
   const reconnect = useCallback(() => {
     reconnectAttemptsRef.current = 0;

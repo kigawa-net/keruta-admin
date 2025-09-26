@@ -3,8 +3,10 @@ import Layout from "~/components/Layout";
 import { useState, useEffect } from "react";
 import { useClient } from "~/components/Client";
 import { useManagementSSE } from "~/hooks/useManagementSSE";
+import { useRealtime } from "~/contexts/RealtimeContext";
 import { apiGet } from "~/utils/api";
 import RealtimeIndicator from "~/components/RealtimeIndicator";
+import RealtimeSettings from "~/components/RealtimeSettings";
 import { formatDate } from "~/utils/dateUtils";
 
 export const meta: MetaFunction = () => {
@@ -39,10 +41,12 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<string>("");
   const clientState = useClient();
+  const { realtimeEnabled } = useRealtime();
 
   // Real-time updates for dashboard
   const { connected, error: sseError, lastEventTime } = useManagementSSE({
     clientState,
+    realtimeEnabled,
     onEvent: (event) => {
       // Add new activity to recent activities
       const newActivity = {
@@ -99,14 +103,16 @@ export default function Index() {
   }, [clientState]);
 
   useEffect(() => {
-    if (connected && !sseError) {
+    if (!realtimeEnabled) {
+      setConnectionStatus("リアルタイム更新: 無効");
+    } else if (connected && !sseError) {
       setConnectionStatus("リアルタイム更新: 接続中");
     } else if (sseError) {
       setConnectionStatus(`リアルタイム更新: エラー - ${sseError}`);
     } else {
       setConnectionStatus("リアルタイム更新: 切断");
     }
-  }, [connected, sseError]);
+  }, [connected, sseError, realtimeEnabled]);
 
 
   return (
@@ -144,11 +150,13 @@ export default function Index() {
           <div className="col-md-3 mb-3">
             <div className="card border-success">
               <div className="card-body text-center">
-                <div className="display-6 text-success">{connected ? '✓' : '✗'}</div>
+                <div className="display-6 text-success">
+                  {!realtimeEnabled ? '⚫' : connected ? '✓' : '✗'}
+                </div>
                 <small className="text-muted">リアルタイム接続</small>
                 <div className="mt-1">
-                  <span className={`badge ${connected ? 'bg-success' : 'bg-danger'}`}>
-                    {connected ? '接続中' : '切断'}
+                  <span className={`badge ${!realtimeEnabled ? 'bg-secondary' : connected ? 'bg-success' : 'bg-danger'}`}>
+                    {!realtimeEnabled ? '無効' : connected ? '接続中' : '切断'}
                   </span>
                 </div>
               </div>
@@ -285,7 +293,10 @@ export default function Index() {
         </div>
         
         <div className="row">
-          <div className="col-12">
+          <div className="col-lg-6 mb-4">
+            <RealtimeSettings />
+          </div>
+          <div className="col-lg-6 mb-4">
             <div className="card">
               <div className="card-header">
                 <h5 className="card-title">API ドキュメント</h5>
