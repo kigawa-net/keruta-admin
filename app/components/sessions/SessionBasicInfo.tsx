@@ -3,9 +3,14 @@ interface SessionBasicInfoProps {
   loading: boolean;
   error: string | null;
   children: React.ReactNode;
+  onRepositoryUrlChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  repositoryValidation?: {
+    isValid: boolean;
+    message: string;
+  } | null;
 }
 
-export default function SessionBasicInfo({ onSubmit, loading, error, children }: SessionBasicInfoProps) {
+export default function SessionBasicInfo({ onSubmit, loading, error, children, onRepositoryUrlChange, repositoryValidation }: SessionBasicInfoProps) {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
@@ -48,6 +53,35 @@ export default function SessionBasicInfo({ onSubmit, loading, error, children }:
             />
           </div>
 
+          <div className="mb-3">
+            <label htmlFor="repositoryUrl" className="form-label">
+              Gitリポジトリ <span className="text-muted">(任意)</span>
+            </label>
+            <input
+              type="url"
+              className={`form-control ${
+                repositoryValidation
+                  ? repositoryValidation.isValid
+                    ? 'is-valid'
+                    : 'is-invalid'
+                  : ''
+              }`}
+              id="repositoryUrl"
+              name="repositoryUrl"
+              placeholder="https://github.com/username/repository.git"
+              pattern="https?://.*\.git$|https?://github\.com/.*|https?://gitlab\.com/.*|https?://bitbucket\.org/.*"
+              title="有効なGitリポジトリURLを入力してください (例: https://github.com/user/repo.git)"
+              onChange={onRepositoryUrlChange}
+            />
+            {repositoryValidation && repositoryValidation.message && (
+              <div className={`${repositoryValidation.isValid ? 'valid-feedback' : 'invalid-feedback'}`}>
+                {repositoryValidation.message}
+              </div>
+            )}
+            <div className="form-text">
+              GitHub、GitLab、Bitbucketなどのリポジトリに対応しています
+            </div>
+          </div>
 
           {children}
 
