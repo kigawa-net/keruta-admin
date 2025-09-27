@@ -57,12 +57,13 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
   const refreshRealtimeConfig = useCallback(async () => {
     if (clientState.state === "loading") return;
 
-    try {
-      const config = await apiGet(clientState, "admin/api/realtime/config");
-      setRealtimeEnabled(config.enabled);
-    } catch (err) {
-      console.error("Failed to fetch realtime config:", err);
-    }
+    // Realtime is force-disabled, no need to fetch config
+    // try {
+    //   const config = await apiGet(clientState, "admin/api/realtime/config");
+    //   setRealtimeEnabled(config.enabled);
+    // } catch (err) {
+    //   console.error("Failed to fetch realtime config:", err);
+    // }
   }, [clientState]);
 
   useEffect(() => {

@@ -112,9 +112,10 @@ export default function Tasks() {
     // Real-time updates for tasks
     const { connected, error: sseError, lastEventTime } = useManagementSSE({
         clientState,
+        realtimeEnabled: false, // Force disable for now
         onTaskUpdate: (updatedTask) => {
-            setTasks(prevTasks => 
-                prevTasks.map(task => 
+            setTasks(prevTasks =>
+                prevTasks.map(task =>
                     task.id === updatedTask.id ? updatedTask : task
                 )
             );
@@ -125,7 +126,7 @@ export default function Tasks() {
             setConnectionStatus(`New task created: ${new Date().toLocaleTimeString()}`);
         },
         onTaskDeleted: (taskId) => {
-            setTasks(prevTasks => 
+            setTasks(prevTasks =>
                 prevTasks.filter(task => task.id !== taskId)
             );
             setConnectionStatus(`Task deleted: ${new Date().toLocaleTimeString()}`);
