@@ -62,12 +62,13 @@ export default function Sessions() {
         }
     };
 
-    // Real-time updates for sessions
+    // Real-time updates for sessions (disabled)
     const { connected, error: sseError, lastEventTime } = useManagementSSE({
         clientState,
+        realtimeEnabled: false, // Force disable for now
         onSessionUpdate: (updatedSession) => {
-            setSessions(prevSessions => 
-                prevSessions.map(session => 
+            setSessions(prevSessions =>
+                prevSessions.map(session =>
                     session.id === updatedSession.id ? updatedSession : session
                 )
             );
@@ -78,7 +79,7 @@ export default function Sessions() {
             setConnectionStatus(`New session created: ${new Date().toLocaleTimeString()}`);
         },
         onSessionDeleted: (sessionId) => {
-            setSessions(prevSessions => 
+            setSessions(prevSessions =>
                 prevSessions.filter(session => session.id !== sessionId)
             );
             setConnectionStatus(`Session deleted: ${new Date().toLocaleTimeString()}`);
