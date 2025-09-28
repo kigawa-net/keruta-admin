@@ -8,9 +8,15 @@ interface SessionBasicInfoProps {
     isValid: boolean;
     message: string;
   } | null;
+  onBranchChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  branchValidation?: {
+    isValid: boolean;
+    message: string;
+  } | null;
+  fetchingDefaultBranch?: boolean;
 }
 
-export default function SessionBasicInfo({ onSubmit, loading, error, children, onRepositoryUrlChange, repositoryValidation }: SessionBasicInfoProps) {
+export default function SessionBasicInfo({ onSubmit, loading, error, children, onRepositoryUrlChange, repositoryValidation, onBranchChange, branchValidation, fetchingDefaultBranch }: SessionBasicInfoProps) {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
@@ -80,6 +86,42 @@ export default function SessionBasicInfo({ onSubmit, loading, error, children, o
             )}
             <div className="form-text">
               GitHub、GitLab、Bitbucketなどのリポジトリに対応しています
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="repositoryRef" className="form-label">
+              ブランチ・タグ・コミット <span className="text-muted">(任意)</span>
+              {fetchingDefaultBranch && (
+                <span className="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+              )}
+            </label>
+            <input
+              type="text"
+              className={`form-control ${
+                branchValidation
+                  ? branchValidation.isValid
+                    ? 'is-valid'
+                    : 'is-invalid'
+                  : ''
+              }`}
+              id="repositoryRef"
+              name="repositoryRef"
+              placeholder="main"
+              defaultValue="main"
+              pattern="^[a-zA-Z0-9._/-]+$"
+              title="有効なブランチ名、タグ名、またはコミットハッシュを入力してください"
+              onChange={onBranchChange}
+              disabled={fetchingDefaultBranch}
+            />
+            {branchValidation && branchValidation.message && (
+              <div className={`${branchValidation.isValid ? 'valid-feedback' : 'invalid-feedback'}`}>
+                {branchValidation.message}
+              </div>
+            )}
+            <div className="form-text">
+              ブランチ名（例: main, develop）、タグ名（例: v1.0.0）、またはコミットハッシュを指定できます
+              {fetchingDefaultBranch && <span className="text-muted"> - デフォルトブランチを取得中...</span>}
             </div>
           </div>
 
