@@ -9,29 +9,31 @@
     "start": "remix-serve ./build/index.js",
     "typecheck": "echo 'TypeScript check skipped due to segmentation fault issues'",
     "typecheck-real": "tsc",
-    "generate-client": "openapi-ts --input http://localhost:8080/v3/api-docs --output ./app/lib/api-client"
+    "generate-client": "npx openapi-typescript-codegen --input http://localhost:8080/v3/api-docs --output ./app/lib/api-client"
   },
   "dependencies": {
     "@remix-run/node": "^2.3.1",
     "@remix-run/react": "^2.3.1",
     "@remix-run/serve": "^2.3.1",
-    "isbot": "^3.6.8",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@stomp/stompjs": "^7.0.0",
     "bootstrap": "^5.3.2",
+    "commander": "^14.0.1",
+    "isbot": "^3.6.8",
     "jsonwebtoken": "^9.0.2",
     "openapi-fetch": "^0.8.2",
-    "@stomp/stompjs": "^7.0.0",
+    "openapi-typescript-codegen": "^0.29.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "sockjs-client": "^1.6.1"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.3.1",
+    "@types/jsonwebtoken": "^9.0.2",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
-    "@types/jsonwebtoken": "^9.0.2",
     "@types/sockjs-client": "^1.5.4",
-    "typescript": "^5.1.6",
-    "openapi-typescript": "^6.7.3"
+    "openapi-typescript": "^6.7.3",
+    "typescript": "^5.1.6"
   },
   "engines": {
     "node": ">=18.0.0"
